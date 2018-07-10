@@ -2,9 +2,8 @@
 #
 # Checks number of indexed documents in all perfsonar indices and alerts if any of them is significantly less then usual. It sends mails to all the people substribed to that alert. It is run every 30 min from a cron job.
 
-
-# get_ipython().magic('matplotlib inline')
 import matplotlib
+matplotlib.use("agg")
 import matplotlib.pyplot as plt
 
 matplotlib.rc('font', **{'size': 12})
