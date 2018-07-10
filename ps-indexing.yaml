@@ -1,0 +1,18 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: ps-indexing
+spec:
+  schedule: "15,45 * * * *"
+  suspend: false
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: analytics-svc-container
+            image: ivukotic/ml_platform_auto:latest
+            command: ["/ps-indexing.sh"]
+            # args: ["/DDM/run.sh", "ddm_accounting"]
+          restartPolicy: Never
