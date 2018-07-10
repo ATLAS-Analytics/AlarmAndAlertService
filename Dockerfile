@@ -2,8 +2,8 @@ FROM ivukotic/ml_platform_auto:latest
 
 LABEL maintainer Ilija Vukotic <ivukotic@cern.ch>
 
-RUN pip2 --no-cache-dir install  --upgrade google-api-python-client
-RUN pip3 --no-cache-dir install  --upgrade google-api-python-client
+RUN pip2 --no-cache-dir install  --upgrade oauth2client google-api-python-client
+RUN pip3 --no-cache-dir install  --upgrade oauth2client google-api-python-client
 
 COPY . .
 # build info
