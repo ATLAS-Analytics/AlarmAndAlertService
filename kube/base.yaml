@@ -8,4 +8,12 @@ spec:
   - name: aaas-container
     image: atlasanalyticsservice/alarmandalertservice:latest
     args: ["sleep", "36500000"]
+    volumeMounts:
+    - name: google-secret-vol
+      mountPath: "/tmp"
+      readOnly: true
+  volumes:
+  - name: google-secret-vol
+    secret:
+      secretName: google-secret
   restartPolicy: Always

@@ -2,8 +2,6 @@
 For all ATLAS alarm &amp; alert codes. 
 
 ## TODO
-* add secret for the json file
-* top users
 * sending mails
 * packet loss
 * jobs and task indexing

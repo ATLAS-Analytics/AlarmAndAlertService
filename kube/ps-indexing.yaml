@@ -15,4 +15,12 @@ spec:
           - name: aaas-container
             image: atlasanalyticsservice/alarmandalertservice:latest
             command: ["/ps-indexing.sh"]
+            volumeMounts:
+            - name: google-secret-vol
+              mountPath: "/tmp"
+              readOnly: true
+          volumes:
+          - name: google-secret-vol
+            secret:
+              secretName: google-secret
           restartPolicy: Never

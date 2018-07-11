@@ -1,7 +1,7 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: es-cluster-state
+  name: top-users
   namespace: aaas
 spec:
   schedule: "*/15 * * * *"
@@ -14,5 +14,13 @@ spec:
           containers:
           - name: aaas-container
             image: atlasanalyticsservice/alarmandalertservice:latest
-            command: ["/es-cluster-state.sh"]
+            command: ["/top-users.sh"]
+            volumeMounts:
+            - name: google-secret-vol
+              mountPath: "/tmp"
+              readOnly: true
+          volumes:
+          - name: google-secret-vol
+            secret:
+              secretName: google-secret
           restartPolicy: Never
