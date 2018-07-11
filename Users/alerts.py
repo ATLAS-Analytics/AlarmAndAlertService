@@ -20,7 +20,7 @@ class alerts:
 
     def __init__(self):
         SCOPE = ["https://spreadsheets.google.com/feeds"]
-        SECRETS_FILE = "/tmp/AlertingService-879d85ad058f.json"
+        SECRETS_FILE = "/secrets/AlertingService-879d85ad058f.json"
         credentials = ServiceAccountCredentials.from_json_keyfile_name(SECRETS_FILE, SCOPE)
         http = credentials.authorize(httplib2.Http())
         discoveryUrl = 'https://sheets.googleapis.com/$discovery/rest?version=v4'

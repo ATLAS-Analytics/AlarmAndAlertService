@@ -10,7 +10,7 @@ spec:
     args: ["sleep", "36500000"]
     volumeMounts:
     - name: google-secret-vol
-      mountPath: "/tmp"
+      mountPath: "/secrets"
       readOnly: true
   volumes:
   - name: google-secret-vol
