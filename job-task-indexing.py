@@ -44,8 +44,6 @@ if res['hits']['total'] == 0:
         A.sendMail(test_name, user.email, body)
         A.addAlert(test_name, user.name, str(res))
 
-
-ind = 'tasks_archive_%d-%02d' % (ct.year, ct.month)
 tasks_query = {
     "size": 0,
     "query": {
@@ -53,7 +51,7 @@ tasks_query = {
     }
 }
 
-res = es.search(index=ind, body=tasks_query, request_timeout=120)
+res = es.search(index='tasks', body=tasks_query, request_timeout=120)
 print(res)
 
 
