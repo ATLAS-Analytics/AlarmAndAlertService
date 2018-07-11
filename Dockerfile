@@ -10,7 +10,6 @@ RUN pip3 --no-cache-dir install  --upgrade oauth2client google-api-python-client
 COPY . .
 RUN mkdir Images
 RUN mkdir Users/Images
-
 # build info
 RUN echo "Timestamp:" `date --utc` | tee /image-build-info.txt
 

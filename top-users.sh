@@ -1,5 +1,8 @@
 #!/bin/bash
 date
+
+service sendmail start
+
 python3 top-users-Alarm.py
 rc=$?; if [[ $rc != 0 ]]; then 
     echo "problem getting top users. Exiting."
