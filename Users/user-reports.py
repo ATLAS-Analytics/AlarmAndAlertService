@@ -7,9 +7,6 @@ matplotlib.use("agg")
 import matplotlib.pyplot as plt
 matplotlib.rc('font', **{'size': 12})
 
-import numpy as np
-import re
-import json
 from elasticsearch import Elasticsearch, exceptions as es_exceptions
 from pandas.io.json import json_normalize
 from IPython.display import display
