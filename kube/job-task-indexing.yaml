@@ -1,10 +1,10 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: top-users
+  name: job-task-indexing
   namespace: aaas
 spec:
-  schedule: "2 3 * * *"
+  schedule: "25 4,10,16,22 * * *"
   suspend: false
   concurrencyPolicy: Forbid
   jobTemplate:
@@ -14,7 +14,7 @@ spec:
           containers:
           - name: aaas-container
             image: atlasanalyticsservice/alarmandalertservice:latest
-            command: ["/top-users.sh"]
+            command: ["/job-task-indexing.sh"]
             volumeMounts:
             - name: google-secret-vol
               mountPath: "/tmp"

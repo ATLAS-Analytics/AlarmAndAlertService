@@ -1,19 +1,16 @@
 # <h1>This notebook retrieves from ES the info from jobs_archive about 10 top users, and sends alarm if usage is above certain thresholds</h1>
 
-import numpy as np
-import re
+import subprocess
 import json
 from elasticsearch import Elasticsearch, exceptions as es_exceptions
 from pandas.io.json import json_normalize
-from IPython.display import display
 from pandas import DataFrame
 import pandas as pd
 from datetime import datetime, timedelta
 import datetime
 
-es = Elasticsearch(hosts=[{'host': 'atlas-kibana.mwt2.org', 'port': 9200}], timeout=60)
 
-ind = 'jobs'
+es = Elasticsearch(hosts=[{'host': 'atlas-kibana.mwt2.org', 'port': 9200}], timeout=60)
 
 # ## Alerts and Alarms
 
@@ -23,6 +20,7 @@ import alerts
 S = subscribers()
 A = alerts.alerts()
 
+ind = 'jobs'
 
 # <h2>First Alarm</h2>
 # <h3>get top 10 users/24 hours for walltime*core, and filter out sum walltime > 15 years</h3>
@@ -65,7 +63,8 @@ s = {
                             "inline": "def core=doc['actualcorecount'].value; if (core!=null) {return doc['wall_time'].value * core} else {return doc['wall_time'].value}"
                         }
                     }
-                }
+
+                },
             }
         }
     }
@@ -75,6 +74,11 @@ res = es.search(index=ind, body=s, request_timeout=12000)
 # print(res)
 
 agg = res['aggregations']['users']['buckets']
+jsondata = json.dumps(agg)
+
+process = subprocess.Popen(["curl", "-D-", "-H", "Content-Type:application/json", "-X", "POST", "--data", jsondata,
+                            "http://test-jgarcian.web.cern.ch/test-jgarcian/cgi-bin/usersJIRA.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+stdout, stderr = process.communicate()
 # print(agg)
 
 # create df
@@ -85,9 +89,9 @@ df_w['ncores'] = df_w['walltime_core_sum.value'].apply(lambda x: x * 365.)  # tr
 LIMIT_WALLTIME = 15  # 5 for testing
 df_w = df_w[df_w["walltime_core_sum.value"] > LIMIT_WALLTIME]
 
-display(df_w)
 df_w.columns = ['jobs', 'user', 'walltime used [years]', 'number of cores']
 print(df_w.to_string())
+
 
 if df_w.shape[0] > 0:
     test_name = 'Top Analysis users [Large wall time]'
@@ -100,15 +104,16 @@ if df_w.shape[0] > 0:
         body += '\nhttps://its.cern.ch/jira/browse/ADCDPA-1'
         body += '\n To change your alerts preferences please use the following link:\n' + u.link
         body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
-        A.sendMail(test_name, u.email, body)
+        #A.sendMail(test_name, u.email, body)
         # print(body)
-    A.addAlert(test_name, u.name, str(df_w.shape[0]) + ' users with huge walltime.')
+    #A.addAlert(test_name, u.name, str(df_w.shape[0])+' users with huge walltime.')
 else:
     print('No Alarm')
 
 
 # <h2>Second Alarm</h2>
 # <h3>get top 10 users/24 hours for inputfilebytes, and filter out sum input size > 500 TB</h3>
+
 
 s = {
     "size": 0,  # get one job entry only for debugging purposes
@@ -153,17 +158,23 @@ s = {
 res = es.search(index=ind, body=s, request_timeout=12000)
 # print(res)
 
+
 agg = res['aggregations']['users']['buckets']
 # print(agg)
+
+jsondata = json.dumps(agg)
+
+process = subprocess.Popen(["curl", "-D-", "-H", "Content-Type:application/json", "-X", "POST", "--data", jsondata,
+                            "http://test-jgarcian.web.cern.ch/test-jgarcian/cgi-bin/usersJIRA.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+stdout, stderr = process.communicate()
+print(stdout)
 
 # create df
 df_i = json_normalize(agg)
 df_i['inputsize_sum.value'] = df_i['inputsize_sum.value'].apply(lambda x: x * 0.00000000000089)
-# display(df_i)
 
 LIMIT_INPUTSIZE = 500  # 5 for testing
 df_i = df_i[df_i["inputsize_sum.value"] > LIMIT_INPUTSIZE]
-# display(df_i)
 
 df_i.columns = ['jobs', 'input size [TB]', 'user']
 print(df_i.to_string())
@@ -180,15 +191,18 @@ if df_i.shape[0] > 0:
         body += '\nhttps://its.cern.ch/jira/browse/ADCDPA-1'
         body += '\n To change your alerts preferences please use the following link:\n' + u.link
         body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
-        A.sendMail(test_name, u.email, body)
+        #A.sendMail(test_name, u.email, body)
         # print(body)
-        A.addAlert(test_name, u.name, str(df_w.shape[0]) + ' users with huge walltime.')
+        #A.addAlert(test_name, u.name, str(df_w.shape[0])+' users with huge walltime.')
 else:
     print('No Alarm')
 
 
 # <h2>Third Alarm</h2>
 # <h3>Notify if user job efficiency drops before 70%</h3>
+
+# In[10]:
+
 
 s = {
     "size": 0,  # get one job entry only for debugging purposes
@@ -239,7 +253,6 @@ agg = res['aggregations']['status']['buckets']
 
 # create df
 df_e = json_normalize(agg)
-# display(df_e)
 
 finished = df_e[df_e['key'] == 'finished']
 successful = finished['corecount_sum.value'].iloc[0]
@@ -259,6 +272,7 @@ else:
 
 if (len(Alarm) > 0):
     print(Alarm)
+
 
 if (len(Alarm) > 0):
     test_name = 'Top Analysis users [Low efficiency]'
@@ -282,6 +296,7 @@ else:
 
 # <h2>Fourth alarm -- DISABLED --- TO BE REVIEWED</h2>
 # <h3>get name of users with >70 retries in last 24 hours, should we also add a lower limit on the number of jobs?</h3>
+
 
 s = {
     "size": 0,  # get one job entry only for debugging purposes
@@ -335,19 +350,18 @@ agg = res['aggregations']['status']['buckets']
 
 # create df
 df_a = json_normalize(agg)
-# display(df_a)
 if df_a.shape[0] > 0:
     df_a = df_a.drop("doc_count", 1)
 
     # LIMIT_JOBS = 5 #for testing
     #df_a = df_a[df_a["corecount_sum.value"] > LIMIT_JOBS]
-    # display(df_a)
 
     df_a.columns = ['jobs', 'user']
     print(df_a.to_string())
 
 
 if df_a.shape[0] > 0:
+    print('here')
     test_name = 'Top Analysis users [Retrial attempts]'
     for u in S.get_immediate_subscribers(test_name):
         body = 'Dear ' + u.name + ',\n\n'
@@ -360,8 +374,8 @@ if df_a.shape[0] > 0:
         body += '\nhttps://its.cern.ch/jira/browse/ADCDPA-1'
         body += '\n To change your alerts preferences please use the following link:\n' + u.link
         body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
-        A.sendMail(test_name, u.email, body)
+        #A.sendMail(test_name, u.email, body)
         # print(body)
-        A.addAlert(test_name, u.name, str(df_a.shape[0]) + ' users with jobs with large retrial attempts.')
+        #A.addAlert(test_name, u.name, str(df_a.shape[0])+' users with jobs with large retrial attempts.')
 else:
     print('No Alarm')
