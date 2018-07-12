@@ -300,6 +300,8 @@ for ip in ip_list_better:
         text += "These are the remaining problematic src-destination paths for the past hour:\n"
         text += wtext
 #    print(text)
+    if ip not in user_interest_site_ip:
+        continue
     for user in user_interest_site_ip[ip]:
         user.alerts.append(text)
 

@@ -22,10 +22,10 @@ A.sendGunMail('Test alert', 'ilijav@gmail.com', body)
 A.send_GUN_HTML_mail('Test alert', 'ilijav@gmail.com', body,
                      subtitle=test_name,
                      images=[
-                         {
-                             "Title": 'Current vs Referent time',
-                             "Description": "This plot shows number of documents indexed in two intervals. The Current interval is 1h long except for meta data (24h). Referent interval is just before current interval but is twice longer.",
-                             "Filename": "Images/R.jpg",
-                             "Link": "http://atlas-kibana.mwt2.org:5601/goto/ac56c27fd9b063b12ee522501f753427"
-                         }
+                         #  {
+                         #      "Title": 'Current vs Referent time',
+                         #      "Description": "This plot shows number of documents indexed in two intervals. The Current interval is 1h long except for meta data (24h). Referent interval is just before current interval but is twice longer.",
+                         #      "Filename": "Images/R.jpg",
+                         #      "Link": "http://atlas-kibana.mwt2.org:5601/goto/ac56c27fd9b063b12ee522501f753427"
+                         #  }
                      ])
