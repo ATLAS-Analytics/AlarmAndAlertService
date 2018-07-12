@@ -1,3 +1,4 @@
+import os
 import requests
 import httplib2
 import json
@@ -11,7 +12,6 @@ from oauth2client import tools
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
-import os
 
 from subprocess import Popen, PIPE
 
@@ -44,6 +44,17 @@ class alerts:
         p = Popen(["/usr/sbin/sendmail", "-t", "-oi", "-r AAAS@mwt2.org"], stdin=PIPE)
         print(msg.as_string())
         p.communicate(msg.as_string().encode('utf-8'))
+
+    def sendGunMail(self, test, to, body):
+        requests.post(
+            "https://api.mailgun.net/v3/analytics.mwt2.org/messages",
+            auth=("api", os.environ['MAILGUN_API_KEY']),
+            data={
+                "from": "ATLAS Alarm & Alert System <aaas@analytics.mwt2.org>",
+                "to": [to],
+                "subject": test,
+                "text": body}
+        )
 
     def send_HTML_mail(self, test, to, body, subtitle="", images=[]):
         msg = MIMEMultipart('related')
@@ -89,3 +100,40 @@ class alerts:
         p = Popen(["/usr/sbin/sendmail", "-t", "-oi", "-r AAAS@mwt2.org"], stdin=PIPE)
         # print(msg.as_string())
         p.communicate(msg.as_string().encode('utf-8'))
+
+    def send_GUN_HTML_mail(self, test, to, body, subtitle="", images=[]):
+
+        html = open("index.htm", "r").read()
+        image_template = open("image_template.htm", "r").read()
+
+        html = html.replace('TheMainTitle', test)
+        html = html.replace('TheSubtitle', subtitle)
+        html = html.replace('MyBody', body)
+
+        html = html.replace('TheImagePlaceholder1', image_template * int((len(images) + 1) / 2))
+        html = html.replace('TheImagePlaceholder2', image_template * int(len(images) / 2))
+
+        ims = []
+        for ind, i in enumerate(images):
+            #print("Adding image:", i)
+            html = html.replace('FigureTitle', i['Title'], 2)  # appears twice per figure
+            html = html.replace('FigureFilename', "cid:image" + str(ind), 1)
+            html = html.replace('FigureDescription', i['Description'], 1)
+            link = ''
+            if 'Link' in i:
+                link = i['Link']
+            html = html.replace('FigureLink', link, 1)
+            ims.append(("inline", ("image" + str(ind), open(i['Filename'], 'rb').read())))
+
+        requests.post(
+            "https://api.mailgun.net/v3/analytics.mwt2.org/messages",
+            auth=("api", os.environ['MAILGUN_API_KEY']),
+            files=ims,
+            data={
+                "from": "ATLAS Alarm & Alert System <aaas@analytics.mwt2.org>",
+                "to": [to],
+                "subject": test,
+                "text": body,
+                "html": html
+            }
+        )

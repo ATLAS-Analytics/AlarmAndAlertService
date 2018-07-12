@@ -1,7 +1,7 @@
 #!/bin/bash
 date
 
-service sendmail start
+# service sendmail start
 
 python3 top-users-Alarm.py
 rc=$?; if [[ $rc != 0 ]]; then 

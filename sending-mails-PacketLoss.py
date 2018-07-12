@@ -325,5 +325,5 @@ for user in users:
         body += '\n To change your alerts preferences please use the following link:\n' + user.link
         body += '\n\nBest regards,\nATLAS Networking Alert Service'
         # print(body)
-        A.sendMail(emailSubject, user.email, body)
+        A.sendGunMail(emailSubject, user.email, body)
         A.addAlert(test_name, user.name, 'change in packet loss')

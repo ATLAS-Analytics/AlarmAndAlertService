@@ -94,7 +94,7 @@ if df_w.shape[0] > 0:
         body += '\nhttps://its.cern.ch/jira/browse/ADCDPA-1'
         body += '\n To change your alerts preferences please use the following link:\n' + u.link
         body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
-        A.sendMail(test_name, u.email, body)
+        A.sendGunMail(test_name, u.email, body)
         # print(body)
     A.addAlert(test_name, u.name, str(df_w.shape[0]) + ' users with huge walltime.')
 else:
@@ -174,7 +174,7 @@ if df_i.shape[0] > 0:
         body += '\nhttps://its.cern.ch/jira/browse/ADCDPA-1'
         body += '\n To change your alerts preferences please use the following link:\n' + u.link
         body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
-        A.sendMail(test_name, u.email, body)
+        A.sendGunMail(test_name, u.email, body)
         # print(body)
         A.addAlert(test_name, u.name, str(df_w.shape[0]) + ' users with huge walltime.')
 else:
@@ -267,7 +267,7 @@ if (len(Alarm) > 0):
         body += '\nhttp://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis-User'
         body += '\n To change your alerts preferences please use the following link:\n' + u.link
         body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
-        A.sendMail(test_name, u.email, body)
+        A.sendGunMail(test_name, u.email, body)
         # print(body)
         A.addAlert(test_name, u.name, Alarm)
 else:
@@ -354,7 +354,7 @@ if df_a.shape[0] > 0:
         body += '\nhttps://its.cern.ch/jira/browse/ADCDPA-1'
         body += '\n To change your alerts preferences please use the following link:\n' + u.link
         body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
-        A.sendMail(test_name, u.email, body)
+        A.sendGunMail(test_name, u.email, body)
         # print(body)
         A.addAlert(test_name, u.name, str(df_a.shape[0]) + ' users with jobs with large retrial attempts.')
 else:

@@ -243,7 +243,7 @@ if len(frontiersrvr) > 0 or len(taskid) > 0:
         body += '\nBest regards,\nATLAS AAS'
         body += '\n\n To change your alerts preferences please use the following link:\n' + user.link
 
-        A.sendMail(test_name, user.email, body)
+        A.sendGunMail(test_name, user.email, body)
 #        A.addAlert(test_name, user.name, str(res_page))
 #    A.sendMail(test_name, "julio.lozano.bahilo@cern.ch", body)
 

@@ -15,6 +15,12 @@ spec:
           - name: aaas-container
             image: atlasanalyticsservice/alarmandalertservice:latest
             command: ["/top-users.sh"]
+            env:
+            - name: MAILGUN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mailgun-secret
+                  key: api-key
             volumeMounts:
             - name: google-secret-vol
               mountPath: "/secrets"

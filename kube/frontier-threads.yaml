@@ -14,7 +14,13 @@ spec:
           containers:
           - name: aaas-container
             image: atlasanalyticsservice/alarmandalertservice:latest
-            command: ["/frontier-threads.sh"]
+            command: ["/frontier-threads.sh"]            
+            env:
+            - name: MAILGUN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mailgun-secret
+                  key: api-key
             volumeMounts:
             - name: google-secret-vol
               mountPath: "/secrets"

@@ -287,7 +287,7 @@ if (len(Alarm) > 0):
         body += '\nhttp://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis-User'
         body += '\n To change your alerts preferences please use the following link:\n' + u.link
         body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
-        A.sendMail(test_name, u.email, body)
+        A.sendGunMail(test_name, u.email, body)
         # print(body)
         A.addAlert(test_name, u.name, Alarm)
 else:

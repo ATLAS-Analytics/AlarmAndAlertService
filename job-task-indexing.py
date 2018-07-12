@@ -41,7 +41,7 @@ if res['hits']['total'] == 0:
         body += '\tthis mail is to let you that there is an issue in indexing Panda Jobs data in UC Elasticsearch.\n'
         body += '\nBest regards,\nATLAS AAS'
         body += '\n\n To change your alerts preferences please you the following link:\n' + user.link
-        A.sendMail(test_name, user.email, body)
+        A.sendGunMail(test_name, user.email, body)
         A.addAlert(test_name, user.name, str(res))
 
 tasks_query = {
@@ -66,5 +66,5 @@ if res['hits']['total'] == 0:
         body += '\tthis mail is to let you that there is an issue in indexing Jedi tasks data in UC Elasticsearch.\n'
         body += '\nBest regards,\nATLAS AAS'
         body += '\n\n To change your alerts preferences please you the following link:\n' + user.link
-        A.sendMail(test_name, user.email, body)
+        A.sendGunMail(test_name, user.email, body)
         A.addAlert(test_name, user.name, str(res))

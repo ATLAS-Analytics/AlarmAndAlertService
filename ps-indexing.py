@@ -107,7 +107,7 @@ if problematic.shape[0] > 0:
     for user in users:
         body = 'Dear ' + user.name + ',\n\n'
         body += '\tthis mail is to let you know that there is an issue in indexing Perfsonar data in UC Elasticsearch.\n'
-        A.send_HTML_mail(
+        A.send_GUN_HTML_mail(
             'Networking alert',
             user.email,
             body,

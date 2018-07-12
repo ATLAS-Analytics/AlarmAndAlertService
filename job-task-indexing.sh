@@ -1,6 +1,6 @@
 #!/bin/bash
 date
-service sendmail start
+# service sendmail start
 python3 job-task-indexing.py
 rc=$?; if [[ $rc != 0 ]]; then 
     echo "problem checking cluster state. Exiting."

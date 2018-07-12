@@ -19,9 +19,6 @@ from subscribers import subscribers
 import alerts
 
 
-# In[2]:
-
-
 es = Elasticsearch(hosts=[{'host': 'atlas-kibana.mwt2.org', 'port': 9200}], timeout=60)
 S = subscribers()
 A = alerts.alerts()
@@ -442,7 +439,7 @@ for user in S.get_all_users():
                 "Link": "http://atlas-kibana.mwt2.org/app/kibana#/dashboard/13638e80-5d3d-11e8-99dd-1dc03b06e504"
             })
 
-    A.send_HTML_mail(
+    A.send_GUN_HTML_mail(
         'Grid Resource Utilization',
         user.email,
         body,
