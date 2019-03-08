@@ -4,7 +4,7 @@ metadata:
   name: frontier-failed-q
   namespace: aaas
 spec:
-  schedule: "8 * * * *"
+  schedule: "8 */3 * * *"
   suspend: false
   concurrencyPolicy: Forbid
   jobTemplate:
