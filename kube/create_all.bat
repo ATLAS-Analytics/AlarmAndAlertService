@@ -11,6 +11,6 @@ kubectl create -f ./ps-indexing.yaml
 kubectl create -f ./sending-mails.yaml
 kubectl create -f ./top-users.yaml
 kubectl create -f ./user-reports.yaml
-cd ..\..\containers\
+cd ..\..\containers\FTS
 kubectl create -f ./FTS-secret.yaml
 kubectl create -f ./FTS-deployment.yaml
