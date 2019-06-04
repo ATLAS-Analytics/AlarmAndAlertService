@@ -7,6 +7,10 @@ import datetime
 from elasticsearch import Elasticsearch, exceptions as es_exceptions, helpers
 
 
+import json
+with open('config.json') as json_data:
+    config = json.load(json_data,)
+
 # ### If needed to calculate packet loss for other time moment than "now", overwrite it bellow
 
 cdt = datetime.datetime.utcnow()
@@ -20,8 +24,10 @@ print('between: ', GT, ' and ', LT)
 # ### establish the Elastic Search connection
 
 
-es = Elasticsearch(hosts=[{'host': 'atlas-kibana.mwt2.org', 'port': 9200}], timeout=60)
-
+es = Elasticsearch(
+    hosts=[{'host': config['ES_HOST']}],
+    http_auth=(config['ES_USER'], config['ES_PASS']),
+    timeout=60)
 
 # ### define functions to write an alarm record into ES with detailed info
 

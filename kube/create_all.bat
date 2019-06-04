@@ -1,5 +1,11 @@
+
 kubectl create -f ./namespace.yaml
+
+kubectl delete secret  config -n aaas 
+kubectl create secret generic config -n aaas --from-file=secrets/config.json
+
 secrets/google-secret.bat
+
 kubectl create -f  ./secrets/mailgun-secret.yaml
 kubectl create -f ./es-cluster-state.yaml
 kubectl create -f ./frontier-failed-q.yaml

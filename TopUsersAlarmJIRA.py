@@ -5,7 +5,6 @@
 import numpy as np
 import re
 import subprocess
-import json
 from elasticsearch import Elasticsearch, exceptions as es_exceptions
 from pandas.io.json import json_normalize
 from IPython.display import display
@@ -13,6 +12,8 @@ from pandas import DataFrame
 import pandas as pd
 from datetime import datetime, timedelta
 import datetime
+
+import json
 
 #%% [markdown]
 # <h2>Retrieve all job indexes from ES</h2>
@@ -44,7 +45,15 @@ def time_filter(indices, last_days=1, pattern=''):
 
 
 #%%
-es = Elasticsearch(hosts=[{'host':'atlas-kibana.mwt2.org', 'port':9200}],timeout=60)
+
+with open('config.json') as json_data:
+    config = json.load(json_data,)
+
+# ## Establish Elasticsearch connection
+es = Elasticsearch(
+    hosts=[{'host': config['ES_HOST']}],
+    http_auth=(config['ES_USER'], config['ES_PASS']),
+    timeout=60)
 
 #get job archive indices from ES
 indices = es.cat.indices(index="jobs_archive_*", h="index", request_timeout=600).split('\n')

@@ -29,10 +29,15 @@ A = alerts.alerts()
 # Related to Elasticsearch queries
 from elasticsearch import Elasticsearch, exceptions as es_exceptions, helpers
 
+import json
+with open('config.json') as json_data:
+    config = json.load(json_data,)
 
 # ## Establish Elasticsearch connection
-es = Elasticsearch(hosts=[{'host': 'atlas-kibana.mwt2.org', 'port': 9200}], timeout=60)
-
+es = Elasticsearch(
+    hosts=[{'host': config['ES_HOST']}],
+    http_auth=(config['ES_USER'], config['ES_PASS']),
+    timeout=60)
 
 # ## Queries to find all the alarms of type Packet Loss for the past hour and past past hour
 

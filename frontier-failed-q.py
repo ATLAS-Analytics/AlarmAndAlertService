@@ -15,6 +15,12 @@ import alerts
 from elasticsearch import Elasticsearch, exceptions as es_exceptions
 from elasticsearch.helpers import scan
 
+
+import json
+with open('config.json') as json_data:
+    config = json.load(json_data,)
+
+
 # Period to check from now backwards
 nhours = 1
 # Limit of unsatisfied queries on a given server
@@ -63,7 +69,10 @@ print('current time', curtime)
 #
 # Send a query to the ES-DB for documents containing information of failed queries
 
-es = Elasticsearch(hosts=[{'host': 'atlas-kibana.mwt2.org', 'port': 9200}], timeout=60)
+es = Elasticsearch(
+    hosts=[{'host': config['ES_HOST']}],
+    http_auth=(config['ES_USER'], config['ES_PASS']),
+    timeout=60)
 
 condition = 'rejected:true OR disconn:true OR procerror:true'
 

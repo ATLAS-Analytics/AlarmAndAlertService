@@ -8,8 +8,16 @@ from subscribers import subscribers
 import alerts
 
 from elasticsearch import Elasticsearch, exceptions as es_exceptions
-es = Elasticsearch(hosts=[{'host': 'atlas-kibana.mwt2.org', 'port': 9200}], timeout=60)
 
+
+import json
+with open('config.json') as json_data:
+    config = json.load(json_data,)
+
+es = Elasticsearch(
+    hosts=[{'host': config['ES_HOST']}],
+    http_auth=(config['ES_USER'], config['ES_PASS']),
+    timeout=60)
 
 ct = datetime.now()
 currentTime = int(round(datetime.now().timestamp() * 1000))

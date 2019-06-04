@@ -8,8 +8,12 @@ import subscribers
 import alerts
 import requests
 
+import json
+with open('config.json') as json_data:
+    config = json.load(json_data,)
 
-r = requests.get('http://atlas-kibana.mwt2.org:9200/_cluster/health')
+ES_CONN = 'http://' + config['ES_USER'] + ':' + config['ES_PASS'] + '@' + config['ES_HOST'] + ':9200/_cluster/health'
+r = requests.get(ES_CONN)
 res = r.json()
 print(res)
 

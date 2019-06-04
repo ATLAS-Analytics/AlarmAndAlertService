@@ -15,9 +15,15 @@ import alerts
 
 from datetime import datetime, timedelta
 from elasticsearch import Elasticsearch, exceptions as es_exceptions
-es = Elasticsearch(hosts=[{'host': 'atlas-kibana.mwt2.org', 'port': 9200}], timeout=60)
 
+import json
+with open('config.json') as json_data:
+    config = json.load(json_data,)
 
+es = Elasticsearch(
+    hosts=[{'host': config['ES_HOST']}],
+    http_auth=(config['ES_USER'], config['ES_PASS']),
+    timeout=60)
 # ### define what are the indices to look for
 # first number is interval to check (in hours), second is number in 2 previous intervals, third is number in current interval.
 

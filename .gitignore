@@ -1,5 +1,6 @@
 AlertingService-879d85ad058f.json
 .kube
+secrets
 *secret.*
 
 # Byte-compiled / optimized / DLL files
