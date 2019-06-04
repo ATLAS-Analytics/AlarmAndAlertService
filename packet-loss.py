@@ -8,7 +8,7 @@ from elasticsearch import Elasticsearch, exceptions as es_exceptions, helpers
 
 
 import json
-with open('config.json') as json_data:
+with open('/config/config.json') as json_data:
     config = json.load(json_data,)
 
 # ### If needed to calculate packet loss for other time moment than "now", overwrite it bellow

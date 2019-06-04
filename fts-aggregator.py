@@ -10,7 +10,14 @@ import datetime as dt
 import numpy as np
 import pandas as pd
 
-es = Elasticsearch([{'host': 'atlas-kibana.mwt2.org', 'port': 9200}], timeout=60)
+import json
+with open('/config/config.json') as json_data:
+    config = json.load(json_data,)
+
+es = Elasticsearch(
+    hosts=[{'host': config['ES_HOST']}],
+    http_auth=(config['ES_USER'], config['ES_PASS']),
+    timeout=60)
 
 days_around = 5
 

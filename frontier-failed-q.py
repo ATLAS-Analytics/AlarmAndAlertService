@@ -17,7 +17,7 @@ from elasticsearch.helpers import scan
 
 
 import json
-with open('config.json') as json_data:
+with open('/config/config.json') as json_data:
     config = json.load(json_data,)
 
 

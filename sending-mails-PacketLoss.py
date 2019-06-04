@@ -30,7 +30,7 @@ A = alerts.alerts()
 from elasticsearch import Elasticsearch, exceptions as es_exceptions, helpers
 
 import json
-with open('config.json') as json_data:
+with open('/config/config.json') as json_data:
     config = json.load(json_data,)
 
 # ## Establish Elasticsearch connection

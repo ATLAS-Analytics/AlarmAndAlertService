@@ -9,7 +9,7 @@ import alerts
 import requests
 
 import json
-with open('config.json') as json_data:
+with open('/config/config.json') as json_data:
     config = json.load(json_data,)
 
 ES_CONN = 'http://' + config['ES_USER'] + ':' + config['ES_PASS'] + '@' + config['ES_HOST'] + ':9200/_cluster/health'

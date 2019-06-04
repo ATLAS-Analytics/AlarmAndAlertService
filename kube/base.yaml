@@ -18,8 +18,14 @@ spec:
     - name: google-secret-vol
       mountPath: "/secrets"
       readOnly: true
+    - name: config-volume
+      mountPath: "/config"
+      readOnly: true
   volumes:
   - name: google-secret-vol
     secret:
-      secretName: google-secret
+      secretName: google-secret  
+  - name: config-volume
+    secret:
+      secretName: config
   restartPolicy: Always

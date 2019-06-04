@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 from elasticsearch import Elasticsearch, exceptions as es_exceptions
 
 import json
-with open('config.json') as json_data:
+with open('/config/config.json') as json_data:
     config = json.load(json_data,)
 
 es = Elasticsearch(
