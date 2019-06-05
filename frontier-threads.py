@@ -42,7 +42,7 @@ nhours = 1
 # Get current UTC time (as set in timestamp on ES DB)
 # In order to subtract the time difference we need ct to be a datetime object
 ct = datetime.datetime.utcnow()
-ind = 'frontier-new-%d-%02d' % (ct.year, ct.month)
+ind = 'frontier'
 print(ind)
 curtime = ct.strftime('%Y%m%dT%H%M%S.%f')[:-3] + 'Z'
 

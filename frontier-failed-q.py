@@ -43,23 +43,13 @@ ntottask = 100
 
 
 ct = datetime.datetime.utcnow()
-ind = 'frontier-new-%d-%02d' % (ct.year, ct.month)
+ind = 'frontier'
 print(ind)
 curtime = ct.strftime('%Y%m%dT%H%M%S.%f')[:-3] + 'Z'
 
 td = datetime.timedelta(hours=nhours)
 st = ct - td
 starttime = st.strftime('%Y%m%dT%H%M%S.%f')[:-3] + 'Z'
-
-#####################
-#ind = 'frontier-new-*'
-#td = datetime.timedelta(days=13)
-#nct = ct - td
-#td = datetime.timedelta(days=3)
-#nst = nct - td
-#curtime = nct.strftime('%Y%m%dT%H%M%S.%f')[:-3]+'Z'
-#starttime = nst.strftime('%Y%m%dT%H%M%S.%f')[:-3]+'Z'
-#####################
 
 print('start time', starttime)
 print('current time', curtime)
