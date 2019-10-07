@@ -3,6 +3,7 @@
 # This notebook finds out all the links which have at least five packet loss measurements in the past one hour and the average value of the packet loss measurements is greater than 2%. It is run by a cron job every hour, and it will write the detailed information of every alarm into Elastic Search with the _index: alarms-year-month and _type: packetloss.
 
 import sys
+import time
 import datetime
 from elasticsearch import Elasticsearch, exceptions as es_exceptions, helpers
 
@@ -16,8 +17,10 @@ with open('/config/config.json') as json_data:
 cdt = datetime.datetime.utcnow()
 #cdt = datetime.datetime(2017,1,21,9,0,0)
 
-GT = (cdt - datetime.timedelta(hours=3)).strftime("%Y%m%dT%H%m%S+0000")
-LT = cdt.strftime("%Y%m%dT%H%m%S+0000")
+GT = (time.time() - 3 * 3600) * 1000
+# (cdt - datetime.timedelta(hours=3)).strftime("%Y%m%dT%H%m%S+0000")
+LT = time.time() * 1000
+# LT = cdt.strftime("%Y%m%dT%H%m%S+0000")
 print('between: ', GT, ' and ', LT)
 
 
