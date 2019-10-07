@@ -60,7 +60,7 @@ for ind in ps_indices:
     }
 
     res = es.search(index=ind, body=types_query, request_timeout=120)
-    ps_indices[ind][1] = res['hits']['total']['value']
+    ps_indices[ind][1] = res['hits']['total']
 
     types_query = {
         "size": 0,
@@ -74,7 +74,7 @@ for ind in ps_indices:
     }
 
     res = es.search(index=ind, body=types_query, request_timeout=120)
-    ps_indices[ind][2] = res['hits']['total']['value']
+    ps_indices[ind][2] = res['hits']['total']
 
 
 df = pd.DataFrame(ps_indices)
