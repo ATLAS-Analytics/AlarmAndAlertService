@@ -58,9 +58,6 @@ print('current time', curtime)
 #
 # Send a query to the ES-DB to get the highest number of simultaneous threads beyond the limit imposed by **threadlimit** on each Frontier server for the given time interval
 
-
-es = Elasticsearch(hosts=[{'host': 'atlas-kibana.mwt2.org', 'port': 9200}], timeout=60)
-
 my_query = {
     "size": 0,
     "query": {
