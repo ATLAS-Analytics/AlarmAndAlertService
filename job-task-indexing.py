@@ -38,7 +38,7 @@ res = es.search(index='jobs', body=jobs_query, request_timeout=120)
 print(res)
 
 
-if res['hits']['total'] == 0:
+if res['hits']['total']['value'] == 0:
     S = subscribers()
     A = alerts.alerts()
 
@@ -63,7 +63,7 @@ res = es.search(index='tasks', body=tasks_query, request_timeout=120)
 print(res)
 
 
-if res['hits']['total'] == 0:
+if res['hits']['total']['value'] == 0:
     S = subscribers()
     A = alerts.alerts()
 

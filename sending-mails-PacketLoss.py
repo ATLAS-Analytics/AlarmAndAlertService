@@ -84,10 +84,10 @@ print(query_old)
 
 # ## Execute the query
 result_new = es.search(index='alarms', body=query_new, request_timeout=120)
-print('Number of hits of new alarms:', result_new['hits']['total'])
+print('Number of hits of new alarms:', result_new['hits']['total']['value'])
 
 result_old = es.search(index='alarms', body=query_old, request_timeout=120)
-print('Number of hits of old alarms:', result_old['hits']['total'])
+print('Number of hits of old alarms:', result_old['hits']['total']['value'])
 
 hits_new = result_new['hits']['hits']
 hits_old = result_old['hits']['hits']

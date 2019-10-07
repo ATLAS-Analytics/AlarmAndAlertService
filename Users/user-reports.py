@@ -101,10 +101,10 @@ def user_jobs_aggregations(user, days):
     res = es.search(index="jobs", body=s, request_timeout=12000)
 #     print(res)
 
-    if res['hits']['total'] == 0:
+    if res['hits']['total']['value'] == 0:
         return ''
 
-    jobs = res['hits']['total']
+    jobs = res['hits']['total']['value']
     tasks = res['aggregations']['tasks']['value']
     cpueff = res['aggregations']['cpueff']['value']
     infile = res['aggregations']['inputfilebytes']['value']
@@ -210,7 +210,7 @@ def user_memory_aggregations(user, days):
     res = es.search(index="jobs", body=s, request_timeout=12000)
 #     print(res)
 
-    if res['hits']['total'] == 0:
+    if res['hits']['total']['value'] == 0:
         return ''
 
     jstatus = res['aggregations']['jobstatus']['buckets']
@@ -272,7 +272,7 @@ def user_IO_aggregations(user, days):
 
     res = es.search(index="jobs", body=s, request_timeout=12000)
 #     print(res)
-    if res['hits']['total'] == 0:
+    if res['hits']['total']['value'] == 0:
         return 0
 
     jstatus = res['aggregations']['jobstatus']['buckets']
@@ -344,7 +344,7 @@ def user_disk_aggregations(user):
 
     res = es.search(index="ddm_aggregated", body=s, request_timeout=12000)
 
-    if res['hits']['total'] == 0:
+    if res['hits']['total']['value'] == 0:
         return 0
 
     jstatus = res['aggregations']['dtype']['buckets']
