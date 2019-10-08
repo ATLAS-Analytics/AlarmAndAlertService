@@ -1,7 +1,7 @@
 # AlarmAndAlertService
 For all ATLAS alarm &amp; alert codes. 
 
-## TODO
+## Alert list
 * sending mails
 * packet loss
 * jobs and task indexing
@@ -9,3 +9,5 @@ For all ATLAS alarm &amp; alert codes.
 * Frontier Failed Qs
 * Frontier Threads
 * User reports
+
+## TO DO

@@ -17,9 +17,9 @@ with open('/config/config.json') as json_data:
 cdt = datetime.datetime.utcnow()
 #cdt = datetime.datetime(2017,1,21,9,0,0)
 
-GT = (time.time() - 3 * 3600) * 1000
+GT = int((time.time() - 3 * 3600) * 1000)
 # (cdt - datetime.timedelta(hours=3)).strftime("%Y%m%dT%H%m%S+0000")
-LT = time.time() * 1000
+LT = int(time.time() * 1000)
 # LT = cdt.strftime("%Y%m%dT%H%m%S+0000")
 print('between: ', GT, ' and ', LT)
 
