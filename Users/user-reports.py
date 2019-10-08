@@ -19,7 +19,11 @@ from subscribers import subscribers
 import alerts
 
 
-es = Elasticsearch(hosts=[{'host': 'atlas-kibana.mwt2.org', 'port': 9200}], timeout=60)
+es = Elasticsearch(
+    hosts=[{'host': config['ES_HOST']}],
+    http_auth=(config['ES_USER'], config['ES_PASS']),
+    timeout=60)
+    
 S = subscribers()
 A = alerts.alerts()
 
