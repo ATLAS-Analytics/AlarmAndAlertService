@@ -18,12 +18,15 @@ import datetime
 from subscribers import subscribers
 import alerts
 
+import json
+with open('/config/config.json') as json_data:
+    config = json.load(json_data,)
 
 es = Elasticsearch(
     hosts=[{'host': config['ES_HOST']}],
     http_auth=(config['ES_USER'], config['ES_PASS']),
     timeout=60)
-    
+
 S = subscribers()
 A = alerts.alerts()
 
@@ -102,7 +105,7 @@ def user_jobs_aggregations(user, days):
         }
     }
 
-    res = es.search(index="jobs", body=s, request_timeout=12000)
+    res = es.search(index="jobs", body=s)
 #     print(res)
 
     if res['hits']['total']['value'] == 0:
@@ -211,7 +214,7 @@ def user_memory_aggregations(user, days):
         }
     }
 
-    res = es.search(index="jobs", body=s, request_timeout=12000)
+    res = es.search(index="jobs", body=s)
 #     print(res)
 
     if res['hits']['total']['value'] == 0:
@@ -274,7 +277,7 @@ def user_IO_aggregations(user, days):
         }
     }
 
-    res = es.search(index="jobs", body=s, request_timeout=12000)
+    res = es.search(index="jobs", body=s)
 #     print(res)
     if res['hits']['total']['value'] == 0:
         return 0
@@ -346,7 +349,7 @@ def user_disk_aggregations(user):
         }
     }
 
-    res = es.search(index="ddm_aggregated", body=s, request_timeout=12000)
+    res = es.search(index="ddm_aggregated", body=s)
 
     if res['hits']['total']['value'] == 0:
         return 0

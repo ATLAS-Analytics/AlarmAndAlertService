@@ -65,7 +65,7 @@ for ind in ps_indices:
         }
     }
 
-    res = es.search(index=ind, body=types_query, request_timeout=120)
+    res = es.search(index=ind, body=types_query)
     ps_indices[ind][1] = res['hits']['total']['value']
 
     types_query = {
@@ -79,7 +79,7 @@ for ind in ps_indices:
         }
     }
 
-    res = es.search(index=ind, body=types_query, request_timeout=120)
+    res = es.search(index=ind, body=types_query)
     ps_indices[ind][2] = res['hits']['total']['value']
 
 
@@ -96,8 +96,8 @@ plt.savefig('Images/Check_perfsonar_indexing.png')
 
 df['change'] = df['current'] / df['referent']
 df['pr1'] = df['current'] < 10
-df['pr2'] = df['change'] < 0.7
-df['problem'] = df['pr1'] | df['pr1']
+df['pr2'] = df['change'] < 0.3
+df['problem'] = df['pr1'] | df['pr2']
 df.head(10)
 
 

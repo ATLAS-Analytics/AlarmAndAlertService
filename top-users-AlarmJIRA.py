@@ -76,7 +76,7 @@ s = {
     }
 }
 
-res = es.search(index=ind, body=s, request_timeout=12000)
+res = es.search(index=ind, body=s)
 # print(res)
 
 agg = res['aggregations']['users']['buckets']
@@ -161,7 +161,7 @@ s = {
     }
 }
 
-res = es.search(index=ind, body=s, request_timeout=12000)
+res = es.search(index=ind, body=s)
 # print(res)
 
 
@@ -251,7 +251,7 @@ s = {
 }
 
 
-res = es.search(index=ind, body=s, request_timeout=12000)
+res = es.search(index=ind, body=s)
 # print(res)
 
 agg = res['aggregations']['status']['buckets']
@@ -348,7 +348,7 @@ s = {
     }
 }
 
-res = es.search(index=ind, body=s, request_timeout=12000)
+res = es.search(index=ind, body=s)
 # print(res)
 
 agg = res['aggregations']['status']['buckets']
