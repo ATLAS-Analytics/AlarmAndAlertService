@@ -1,7 +1,7 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: es-cluster-state
+  name: es-backup
   namespace: aaas
 spec:
   schedule: "5 0 * * 0"
