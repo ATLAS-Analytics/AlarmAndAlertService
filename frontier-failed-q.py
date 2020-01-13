@@ -43,7 +43,7 @@ ntottask = 100
 
 
 ct = datetime.datetime.utcnow()
-ind = 'frontier'
+ind = 'frontier_sql'
 print(ind)
 curtime = ct.strftime('%Y%m%dT%H%M%S.%f')[:-3] + 'Z'
 
