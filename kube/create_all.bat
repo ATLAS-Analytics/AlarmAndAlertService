@@ -10,7 +10,6 @@ kubectl create secret generic google-secret -n aaas --from-file=secrets/Alerting
 kubectl create -f  ./secrets/mailgun-secret.yaml
 
 
-kubectl create -f ./es-backup.yaml
 kubectl create -f ./es-cluster-state.yaml
 kubectl create -f ./frontier-failed-q.yaml
 kubectl create -f ./frontier-threads.yaml
