@@ -235,10 +235,10 @@ if len(frontiersrvr) > 0 or len(taskid) > 0:
             for tkey in taskid:
                 body += 'Task id ' + str(tkey) + ' with name ' + taskid[tkey][0] + ' has ' + str(taskid[tkey][1][0]) + ' rejected '
                 body += str(taskid[tkey][1][1]) + ' disconnected and ' + str(taskid[tkey][1][2]) + ' unprocessed queries \n'
-                body += 'http://bigpanda.cern.ch/task/' + str(tkey) + '\n'
-        body += '\nConsult the following link to get a table with the 3 most relevant taskids (beware that\n'
+                body += 'http://bigpanda.cern.ch/tasknew/' + str(tkey) + '\n'
+        body += '\nConsult the following link to get a table with the most relevant taskids (beware that\n'
         body += 'you will have to select the appropriate time period in the upper right corner)\n'
-        body += 'http://atlas-kibana-dev.mwt2.org/goto/fb8cf197b67498d2aee54df04bd79ce1\n'
+        body += 'https://atlas-kibana.mwt2.org:5601/s/frontier/goto/c72d263c3e2b86f394ab99211c99b613\n'
         body += '\nBest regards,\nATLAS AAS'
         body += '\n\n To change your alerts preferences please use the following link:\n' + user.link
 
