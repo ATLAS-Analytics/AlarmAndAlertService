@@ -30,7 +30,7 @@ es = Elasticsearch(
 ps_indices = {
     'ps_meta': [24, 0, 0],
     'ps_owd': [1, 0, 0],
-    'ps_packet_loss': [1, 0, 0],
+    'ps_packetloss': [1, 0, 0],
     'ps_retransmits': [1, 0, 0],
     'ps_status': [1, 0, 0],
     'ps_throughput': [1, 0, 0],
