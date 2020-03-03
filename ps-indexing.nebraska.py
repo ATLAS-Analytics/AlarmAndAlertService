@@ -16,7 +16,7 @@ import alerts
 from datetime import datetime, timedelta
 from elasticsearch import Elasticsearch, exceptions as es_exceptions
 # es = Elasticsearch(hosts=['gracc.opensciencegrid.org/q/'], scheme='https', port=443, timeout=60)
-es = Elasticsearch(['https://gracc.opensciencegrid.org/q/'])
+es = Elasticsearch(['https://hcc-gracc.unl.edu/q'])
 
 # ### define what are the indices to look for
 # first number is interval to check (in hours), second is number in 2 previous intervals, third is number in current interval.
