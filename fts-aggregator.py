@@ -15,14 +15,15 @@ with open('/config/config.json') as json_data:
     config = json.load(json_data,)
 
 es = Elasticsearch(
-    hosts=[{'host': config['ES_HOST']}],
+    hosts=[{'host': config['ES_HOST'], 'schema':'https'}],
     http_auth=(config['ES_USER'], config['ES_PASS']),
     timeout=60)
 
 days_around = 5
 
 date_to_process = sys.argv[1].split('-')
-cdt = datetime.datetime(int(date_to_process[0]), int(date_to_process[1]), int(date_to_process[2]))
+cdt = datetime.datetime(int(date_to_process[0]), int(
+    date_to_process[1]), int(date_to_process[2]))
 # cdt = datetime.datetime.utcnow() - datetime.timedelta(days=2) # to make sure data is in HDFS
 
 
@@ -30,7 +31,8 @@ cdt = datetime.datetime(int(date_to_process[0]), int(date_to_process[1]), int(da
 
 def store(docs_to_store):
     try:
-        res = helpers.bulk(es, docs_to_store, raise_on_exception=True, request_timeout=60)
+        res = helpers.bulk(es, docs_to_store,
+                           raise_on_exception=True, request_timeout=60)
         #print("inserted:",res[0], '\tErrors:',res[1])
     except es_exceptions.ConnectionError as e:
         print('ConnectionError ', e)
@@ -51,8 +53,12 @@ period_start = cdt.replace(hour=0).replace(minute=0).replace(second=0)
 period_end = cdt.replace(hour=23).replace(minute=59).replace(second=59)
 
 bot = dt.datetime(1970, 1, 1)
-l_index_name = 'links_traffic_' + str(period_start.year) + '-' + str(period_start.month)  # + '-' + str(period_start.day)
-s_index_name = 'sites_traffic_' + str(period_start.year) + '-' + str(period_start.month)  # + '-' + str(period_start.day)
+l_index_name = 'links_traffic_' + \
+    str(period_start.year) + '-' + \
+    str(period_start.month)  # + '-' + str(period_start.day)
+s_index_name = 'sites_traffic_' + \
+    str(period_start.year) + '-' + \
+    str(period_start.month)  # + '-' + str(period_start.day)
 
 ps = int((period_start - bot).total_seconds())
 pe = int((period_end - bot).total_seconds())
@@ -66,7 +72,8 @@ bins = []
 for t in range(psb, pse):
     bins.append(t * 60)
 
-endpoint_features = ['EndpointEgress', 'EndpointIgress', 'OutcomingTransfers', 'IncomingTransfers']
+endpoint_features = ['EndpointEgress', 'EndpointIgress',
+                     'OutcomingTransfers', 'IncomingTransfers']
 activities = [
     'Data_Consolidation', 'Production_Input', 'Data_Rebalancing', 'Production_Output', 'User_Subscriptions',
     'Data_Brokering', 'Express'
@@ -83,7 +90,8 @@ class link:
     def add_transfer(self, start_time, end_time, rate):
         st = int(start_time / 60)
         et = int(end_time / 60)
-        area_covered = (et - st + 1) * 60  # area that will be covered in seconds
+        # area that will be covered in seconds
+        area_covered = (et - st + 1) * 60
         actual_seconds = end_time - start_time
         scaled_rate = rate * actual_seconds / area_covered
         for ts in range(st, et + 1):
@@ -134,7 +142,8 @@ class endpoint:
     def add_transfer(self, start_time, end_time, rate, direction):
         st = int(start_time / 60)
         et = int(end_time / 60)
-        area_covered = (et - st + 1) * 60  # area that will be covered in seconds
+        # area that will be covered in seconds
+        area_covered = (et - st + 1) * 60
         actual_seconds = end_time - start_time
         scaled_rate = rate * actual_seconds / area_covered
         if direction:
@@ -191,7 +200,8 @@ query = {
     }
 }
 
-scroll = scan(client=es, index="fts", query=query, scroll='5m', timeout="5m", size=10000)
+scroll = scan(client=es, index="fts", query=query,
+              scroll='5m', timeout="5m", size=10000)
 
 endpoints = {}
 links = {}
@@ -225,7 +235,8 @@ for res in scroll:
         links[link_name] = link(src, dest)
 
     links[link_name].add_transfer(star, tran, rate)
-    links[link_name].add_queue(subm, star, r['metadata']['activity'].replace(' ', '_'))
+    links[link_name].add_queue(
+        subm, star, r['metadata']['activity'].replace(' ', '_'))
 
     endpoints[src].add_transfer(star, tran, rate, 0)
     endpoints[dest].add_transfer(star, tran, rate, 1)

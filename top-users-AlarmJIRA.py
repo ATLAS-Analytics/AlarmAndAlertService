@@ -1,5 +1,7 @@
 # <h1>This notebook retrieves from ES the info from jobs_archive about 10 top users, and sends alarm if usage is above certain thresholds</h1>
 
+import alerts
+from subscribers import subscribers
 import subprocess
 import json
 from elasticsearch import Elasticsearch, exceptions as es_exceptions
@@ -15,13 +17,11 @@ with open('/config/config.json') as json_data:
 
 # ## Establish Elasticsearch connection
 es = Elasticsearch(
-    hosts=[{'host': config['ES_HOST']}],
+    hosts=[{'host': config['ES_HOST'], 'schema':'https'}],
     http_auth=(config['ES_USER'], config['ES_PASS']),
     timeout=60)
 # ## Alerts and Alarms
 
-from subscribers import subscribers
-import alerts
 
 S = subscribers()
 A = alerts.alerts()
@@ -48,7 +48,8 @@ s = {
                     'must_not': [
                         {"term": {"produsername": "gangarbt"}},
                         {"term": {"processingtype": "pmerge"}},
-                        {'exists': {"field": "workinggroup"}}    # only users without workinggroup priviledges
+                        # only users without workinggroup priviledges
+                        {'exists': {"field": "workinggroup"}}
                     ]
                 }
                 }
@@ -89,8 +90,10 @@ stdout, stderr = process.communicate()
 
 # create df
 df_w = json_normalize(agg)
-df_w['walltime_core_sum.value'] = df_w['walltime_core_sum.value'].apply(lambda x: timedelta(seconds=int(x)).days / 365.2)
-df_w['ncores'] = df_w['walltime_core_sum.value'].apply(lambda x: x * 365.)  # transform walltime[year] in walltime[day]
+df_w['walltime_core_sum.value'] = df_w['walltime_core_sum.value'].apply(
+    lambda x: timedelta(seconds=int(x)).days / 365.2)
+df_w['ncores'] = df_w['walltime_core_sum.value'].apply(
+    lambda x: x * 365.)  # transform walltime[year] in walltime[day]
 
 LIMIT_WALLTIME = 15  # 5 for testing
 df_w = df_w[df_w["walltime_core_sum.value"] > LIMIT_WALLTIME]
@@ -106,7 +109,7 @@ if df_w.shape[0] > 0:
         body += 'the following users used substantial wall time (more than 15 years/last 24 hours, corresponding to 5475 cores/day):\n\n'
         body += df_w.to_string() + '\n'
         body += '\n To get more information about this alert message and its interpretation, please visit:\n'
-        body += 'http://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis-User'
+        body += 'https://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis-User'
         body += '\nhttps://its.cern.ch/jira/browse/ADCDPA-1'
         body += '\n To change your alerts preferences please use the following link:\n' + u.link
         body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
@@ -177,7 +180,8 @@ print(stdout)
 
 # create df
 df_i = json_normalize(agg)
-df_i['inputsize_sum.value'] = df_i['inputsize_sum.value'].apply(lambda x: x * 0.00000000000089)
+df_i['inputsize_sum.value'] = df_i['inputsize_sum.value'].apply(
+    lambda x: x * 0.00000000000089)
 
 LIMIT_INPUTSIZE = 500  # 5 for testing
 df_i = df_i[df_i["inputsize_sum.value"] > LIMIT_INPUTSIZE]
@@ -193,7 +197,7 @@ if df_i.shape[0] > 0:
         body += 'the following users processed rather substantial input data (>500 TB/last 24 hours):\n\n'
         body += df_i.to_string() + '\n'
         body += '\n To get more information about this alert message and its interpretation, please visit:\n'
-        body += 'http://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis-User'
+        body += 'https://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis-User'
         body += '\nhttps://its.cern.ch/jira/browse/ADCDPA-1'
         body += '\n To change your alerts preferences please use the following link:\n' + u.link
         body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
@@ -289,8 +293,8 @@ if (len(Alarm) > 0):
         body += '\n The efficiency is defined as walltime of successful jobs divided by the walltime of successful plus failed jobs'
         body += '\n The efficiency is calculated on all user jobs in the last 24 hours.'
         body += '\n To get more information about this alert message and its interpretation, please visit:\n'
-        body += 'http://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis'
-        body += '\nhttp://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis-User'
+        body += 'https://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis'
+        body += '\nhttps://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis-User'
         body += '\n To change your alerts preferences please use the following link:\n' + u.link
         body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
         A.sendGunMail(test_name, u.email, body)
@@ -375,7 +379,8 @@ if df_a.shape[0] > 0:
         body += df_a.to_string() + '\n'
         body += '\n To get more information about what each user is doing, please visit:\n'
         for i in df_a['user'].iteritems():
-            body += 'https://bigpanda.cern.ch/tasks/?username=' + str(i[1]) + '\n'
+            body += 'https://bigpanda.cern.ch/tasks/?username=' + \
+                str(i[1]) + '\n'
         body += '\n If deemed necessary, please contact the user to ask what he/she is doing:\n'
         body += '\nhttps://its.cern.ch/jira/browse/ADCDPA-1'
         body += '\n To change your alerts preferences please use the following link:\n' + u.link

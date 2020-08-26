@@ -35,7 +35,7 @@ with open('/config/config.json') as json_data:
 
 # ## Establish Elasticsearch connection
 es = Elasticsearch(
-    hosts=[{'host': config['ES_HOST']}],
+    hosts=[{'host': config['ES_HOST'], 'schema':'https'}],
     http_auth=(config['ES_USER'], config['ES_PASS']),
     timeout=60)
 

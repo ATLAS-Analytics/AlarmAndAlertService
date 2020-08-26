@@ -51,7 +51,7 @@ with open('/config/config.json') as json_data:
 
 # ## Establish Elasticsearch connection
 es = Elasticsearch(
-    hosts=[{'host': config['ES_HOST']}],
+    hosts=[{'host': config['ES_HOST'], 'schema':'https'}],
     http_auth=(config['ES_USER'], config['ES_PASS']),
     timeout=60)
 
@@ -165,7 +165,7 @@ if df_w.shape[0]>0:
         body += 'the following users used substantial wall time (more than 15 years/last 24 hours, corresponding to 5475 cores/day):\n\n'
         body += df_w.to_string() + '\n'
         body += '\n To get more information about this alert message and its interpretation, please visit:\n'
-        body += 'http://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis-User'
+        body += 'https://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis-User'
         body += '\nhttps://its.cern.ch/jira/browse/ADCDPA-1'
         body += '\n To change your alerts preferences please use the following link:\n'+u.link
         body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
@@ -253,7 +253,7 @@ if df_i.shape[0]>0:
         body += 'the following users processed rather substantial input data (>500 TB/last 24 hours):\n\n'
         body += df_i.to_string() + '\n'
         body += '\n To get more information about this alert message and its interpretation, please visit:\n'
-        body += 'http://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis-User'
+        body += 'https://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis-User'
         body += '\nhttps://its.cern.ch/jira/browse/ADCDPA-1'
         body += '\n To change your alerts preferences please use the following link:\n'+u.link
         body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
@@ -349,7 +349,7 @@ if (len(Alarm)>0):
         body += '\n The efficiency is defined as walltime of successful jobs divided by the walltime of successful plus failed jobs'
         body += '\n The efficiency is calculated on all user jobs in the last 24 hours.'
         body += '\n To get more information about this alert message and its interpretation, please visit:\n'
-        body += 'http://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis'
+        body += 'https://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis'
         body += '\nhttp://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis-User'
         body += '\n To change your alerts preferences please use the following link:\n'+u.link
         body += '\n\nBest regards,\nATLAS Alarm & Alert Service'

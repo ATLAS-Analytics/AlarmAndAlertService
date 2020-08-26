@@ -2,28 +2,27 @@
 # Reports are generated for users that subscribed to them through a Google form.
 
 
+import json
+import alerts
+from subscribers import subscribers
+import datetime
+from datetime import datetime, timedelta
+import pandas as pd
+from pandas import DataFrame
+from IPython.display import display
+from pandas.io.json import json_normalize
+from elasticsearch import Elasticsearch, exceptions as es_exceptions
+import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use("agg")
-import matplotlib.pyplot as plt
 matplotlib.rc('font', **{'size': 12})
 
-from elasticsearch import Elasticsearch, exceptions as es_exceptions
-from pandas.io.json import json_normalize
-from IPython.display import display
-from pandas import DataFrame
-import pandas as pd
-from datetime import datetime, timedelta
-import datetime
 
-from subscribers import subscribers
-import alerts
-
-import json
 with open('/config/config.json') as json_data:
     config = json.load(json_data,)
 
 es = Elasticsearch(
-    hosts=[{'host': config['ES_HOST']}],
+    hosts=[{'host': config['ES_HOST'], 'schema':'https'}],
     http_auth=(config['ES_USER'], config['ES_PASS']),
     timeout=60)
 
@@ -127,7 +126,8 @@ def user_jobs_aggregations(user, days):
     print(df_w)
 
     fig1, ax1 = plt.subplots()
-    ax1.pie(df_w, labels=df_w.index, autopct='%1.1f%%', shadow=False, startangle=90)
+    ax1.pie(df_w, labels=df_w.index, autopct='%1.1f%%',
+            shadow=False, startangle=90)
     ax1.axis('equal')
     fig1.set_size_inches(6, 6)
 
@@ -141,8 +141,10 @@ def user_jobs_aggregations(user, days):
     text += '<B>CPU efficiency: </B>' + str(round(cpueff, 2)) + '<BR>'
     text += '<B>CPU time: </B>' + str(round(cputime / 3600, 2)) + ' hours<BR>'
     text += '<B>Walltime: </B>' + str(round(walltime / 3600, 2)) + ' hours<BR>'
-    text += '<B>Input data processed:</B>' + str(round(infile / 1024 / 1024 / 1024, 2)) + ' GB<BR>'
-    text += '<B>Data produced: </B>' + str(round(outfile / 1024 / 1024 / 1024, 2)) + ' GB<BR>'
+    text += '<B>Input data processed:</B>' + \
+        str(round(infile / 1024 / 1024 / 1024, 2)) + ' GB<BR>'
+    text += '<B>Data produced: </B>' + \
+        str(round(outfile / 1024 / 1024 / 1024, 2)) + ' GB<BR>'
     text += '<B>Processing rate: </B>' + str(round(evps, 2)) + '[events/s]<BR>'
     return text
 
@@ -417,7 +419,7 @@ for user in S.get_all_users():
                 "Title": 'Job efficiency',
                 "Description": " You should try to have as small as possible fraction of Failed jobs. Canceled and Closed jobs are a feature of the production system.",
                 "Filename": "Images/" + user.rucio_username + "_job_eff.png",
-                "Link": "http://atlas-kibana.mwt2.org/app/kibana#/dashboard/29a93670-5d12-11e8-99dd-1dc03b06e504"
+                "Link": "https://atlas-kibana.mwt2.org/app/kibana#/dashboard/29a93670-5d12-11e8-99dd-1dc03b06e504"
             })
         ret = user_IO_aggregations(user.rucio_username, days)
         if ret > 0:
@@ -425,7 +427,7 @@ for user in S.get_all_users():
                 "Title": 'Jobs IO',
                 "Description": "values are in MB. When less than a tenth of data is actually read, you might want to think of prefiltering the data. Reading 100% of data frequently means you use ReadEvent for all events and that is also not good practice.",
                 "Filename": "Images/" + user.rucio_username + "_io_eff.png",
-                "Link": "http://atlas-kibana.mwt2.org/app/kibana#/dashboard/3ce37050-5d2d-11e8-99dd-1dc03b06e504"
+                "Link": "https://atlas-kibana.mwt2.org/app/kibana#/dashboard/3ce37050-5d2d-11e8-99dd-1dc03b06e504"
             })
 
     if 'Memory' in user.jobs:
@@ -438,12 +440,13 @@ for user in S.get_all_users():
     if 'Disk space' in user.jobs:
         tot = user_disk_aggregations(user.rucio_username)
         if tot > 0:
-            body += "<BR><B>Total disk space used: </B>" + str(round(tot, 2)) + " GB<BR>"
+            body += "<BR><B>Total disk space used: </B>" + \
+                str(round(tot, 2)) + " GB<BR>"
             imgs.append({
                 "Title": 'Disk space',
                 "Description": "here split is per site and data type. When unable to determine the type from filename, it is gruped in Unknown category.",
                 "Filename": "Images/" + user.rucio_username + "_diskspace.png",
-                "Link": "http://atlas-kibana.mwt2.org/app/kibana#/dashboard/13638e80-5d3d-11e8-99dd-1dc03b06e504"
+                "Link": "https://atlas-kibana.mwt2.org/app/kibana#/dashboard/13638e80-5d3d-11e8-99dd-1dc03b06e504"
             })
 
     A.send_GUN_HTML_mail(

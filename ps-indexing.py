@@ -21,7 +21,7 @@ with open('/config/config.json') as json_data:
     config = json.load(json_data,)
 
 es = Elasticsearch(
-    hosts=[{'host': config['ES_HOST']}],
+    hosts=[{'host': config['ES_HOST'], 'schema':'https'}],
     http_auth=(config['ES_USER'], config['ES_PASS']),
     timeout=60)
 # ### define what are the indices to look for
