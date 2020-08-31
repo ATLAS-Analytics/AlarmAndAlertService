@@ -17,6 +17,8 @@
 # (12) In order to send email, we need a dictionary whose key is site ip and value is a list of relevant user emails
 
 # Regular Expression
+import json
+from elasticsearch import Elasticsearch, exceptions as es_exceptions, helpers
 import re
 
 # Retrieve user subscribing records from google sheets.
@@ -27,15 +29,13 @@ S = subscribers()
 A = alerts.alerts()
 
 # Related to Elasticsearch queries
-from elasticsearch import Elasticsearch, exceptions as es_exceptions, helpers
 
-import json
 with open('/config/config.json') as json_data:
     config = json.load(json_data,)
 
 # ## Establish Elasticsearch connection
 es = Elasticsearch(
-    hosts=[{'host': config['ES_HOST'], 'schema':'https'}],
+    hosts=[{'host': config['ES_HOST'], 'scheme':'https'}],
     http_auth=(config['ES_USER'], config['ES_PASS']),
     timeout=60)
 
@@ -189,7 +189,8 @@ for N in range(10):
             count_better += 1
         else:
             count_stable += 1
-    print('N=%d     links went bad=%d     links went good=%d     unchanged=%d' % (N, count_worse, count_better, count_stable))
+    print('N=%d     links went bad=%d     links went good=%d     unchanged=%d' % (
+        N, count_worse, count_better, count_stable))
 
 
 # ## Let's use N=6 for now, and we will tune later
@@ -234,7 +235,8 @@ for user in users:
     print(user.to_string(), sitenames)
     if len(sitenames) == 0:
         sitenames = ['.']  # Handle blank answer, so match all site names
-    sitenames = [x.replace('*', '.') for x in sitenames]  # Handle several site names, and wildcard
+    # Handle several site names, and wildcard
+    sitenames = [x.replace('*', '.') for x in sitenames]
     for sn in sitenames:
         p = re.compile(sn, re.IGNORECASE)
         for sitename in site_name_ip:
@@ -272,12 +274,14 @@ for ip in ip_list_worse:
         src_ip = alarm['_source']['src']
         dest_ip = alarm['_source']['dest']
         if src_ip == ip:
-            text += '    %s (%s)  --->  %s (%s) \n' % (site_ip_name[src_ip], src_ip, site_ip_name[dest_ip], dest_ip)
+            text += '    %s (%s)  --->  %s (%s) \n' % (
+                site_ip_name[src_ip], src_ip, site_ip_name[dest_ip], dest_ip)
     for alarm in hits_new:
         src_ip = alarm['_source']['src']
         dest_ip = alarm['_source']['dest']
         if dest_ip == ip:
-            text += '    %s (%s)  --->  %s (%s) \n' % (site_ip_name[src_ip], src_ip, site_ip_name[dest_ip], dest_ip)
+            text += '    %s (%s)  --->  %s (%s) \n' % (
+                site_ip_name[src_ip], src_ip, site_ip_name[dest_ip], dest_ip)
     print(text)
     if ip not in user_interest_site_ip:
         continue
@@ -295,12 +299,14 @@ for ip in ip_list_better:
         src_ip = alarm['_source']['src']
         dest_ip = alarm['_source']['dest']
         if src_ip == ip:
-            text += '    %s (%s)  --->  %s (%s) \n' % (site_ip_name[src_ip], src_ip, site_ip_name[dest_ip], dest_ip)
+            text += '    %s (%s)  --->  %s (%s) \n' % (
+                site_ip_name[src_ip], src_ip, site_ip_name[dest_ip], dest_ip)
     for alarm in hits_new:
         src_ip = alarm['_source']['src']
         dest_ip = alarm['_source']['dest']
         if dest_ip == ip:
-            text += '    %s (%s)  --->  %s (%s) \n' % (site_ip_name[src_ip], src_ip, site_ip_name[dest_ip], dest_ip)
+            text += '    %s (%s)  --->  %s (%s) \n' % (
+                site_ip_name[src_ip], src_ip, site_ip_name[dest_ip], dest_ip)
     if len(wtext) > 0:
         text += "These are the remaining problematic src-destination paths for the past hour:\n"
         text += wtext

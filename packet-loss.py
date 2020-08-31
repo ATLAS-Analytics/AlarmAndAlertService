@@ -28,7 +28,7 @@ print('between: ', GT, ' and ', LT)
 
 
 es = Elasticsearch(
-    hosts=[{'host': config['ES_HOST'], 'schema':'https'}],
+    hosts=[{'host': config['ES_HOST'], 'scheme':'https'}],
     http_auth=(config['ES_USER'], config['ES_PASS']),
     timeout=60)
 
@@ -177,7 +177,8 @@ for alert in toAlertOn:
 # ### write alarms to Elasticsearch
 
 try:
-    res = helpers.bulk(es, toAlertOn, raise_on_exception=True, request_timeout=60)
+    res = helpers.bulk(
+        es, toAlertOn, raise_on_exception=True, request_timeout=60)
     print("inserted:", res[0], '\tErrors:', res[1])
 except es_exceptions.ConnectionError as e:
     print('ConnectionError ', e)

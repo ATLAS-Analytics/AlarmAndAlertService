@@ -1,5 +1,7 @@
 # <h1>This notebook retrieves from ES the info from jobs_archive about 10 top users, and sends alarm if usage is above certain thresholds</h1>
 
+import alerts
+from subscribers import subscribers
 from elasticsearch import Elasticsearch, exceptions as es_exceptions
 from pandas.io.json import json_normalize
 
@@ -12,7 +14,7 @@ with open('/config/config.json') as json_data:
 
 # ## Establish Elasticsearch connection
 es = Elasticsearch(
-    hosts=[{'host': config['ES_HOST'], 'schema':'https'}],
+    hosts=[{'host': config['ES_HOST'], 'scheme':'https'}],
     http_auth=(config['ES_USER'], config['ES_PASS']),
     timeout=60)
 
@@ -20,8 +22,6 @@ ind = 'jobs'
 
 # ## Alerts and Alarms
 
-from subscribers import subscribers
-import alerts
 
 S = subscribers()
 A = alerts.alerts()
@@ -47,7 +47,8 @@ s = {
                     'must_not': [
                         {"term": {"produsername": "gangarbt"}},
                         {"term": {"processingtype": "pmerge"}},
-                        {'exists': {"field": "workinggroup"}}    # only users without workinggroup priviledges
+                        # only users without workinggroup priviledges
+                        {'exists': {"field": "workinggroup"}}
                     ]
                 }
                 }
@@ -82,8 +83,10 @@ agg = res['aggregations']['users']['buckets']
 
 # create df
 df_w = json_normalize(agg)
-df_w['walltime_core_sum.value'] = df_w['walltime_core_sum.value'].apply(lambda x: timedelta(seconds=int(x)).days / 365.2)
-df_w['ncores'] = df_w['walltime_core_sum.value'].apply(lambda x: x * 365.)  # transform walltime[year] in walltime[day]
+df_w['walltime_core_sum.value'] = df_w['walltime_core_sum.value'].apply(
+    lambda x: timedelta(seconds=int(x)).days / 365.2)
+df_w['ncores'] = df_w['walltime_core_sum.value'].apply(
+    lambda x: x * 365.)  # transform walltime[year] in walltime[day]
 
 LIMIT_WALLTIME = 15  # 5 for testing
 df_w = df_w[df_w["walltime_core_sum.value"] > LIMIT_WALLTIME]
@@ -104,7 +107,8 @@ if df_w.shape[0] > 0:
         body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
         A.sendGunMail(test_name, u.email, body)
         # print(body)
-    A.addAlert(test_name, u.name, str(df_w.shape[0]) + ' users with huge walltime.')
+    A.addAlert(test_name, u.name, str(
+        df_w.shape[0]) + ' users with huge walltime.')
 else:
     print('No Alarm')
 
@@ -160,7 +164,8 @@ agg = res['aggregations']['users']['buckets']
 
 # create df
 df_i = json_normalize(agg)
-df_i['inputsize_sum.value'] = df_i['inputsize_sum.value'].apply(lambda x: x * 0.00000000000089)
+df_i['inputsize_sum.value'] = df_i['inputsize_sum.value'].apply(
+    lambda x: x * 0.00000000000089)
 # display(df_i)
 
 LIMIT_INPUTSIZE = 500  # 5 for testing
@@ -184,7 +189,8 @@ if df_i.shape[0] > 0:
         body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
         A.sendGunMail(test_name, u.email, body)
         # print(body)
-        A.addAlert(test_name, u.name, str(df_w.shape[0]) + ' users with huge walltime.')
+        A.addAlert(test_name, u.name, str(
+            df_w.shape[0]) + ' users with huge walltime.')
 else:
     print('No Alarm')
 
@@ -357,13 +363,15 @@ if df_a.shape[0] > 0:
         body += df_a.to_string() + '\n'
         body += '\n To get more information about what each user is doing, please visit:\n'
         for i in df_a['user'].iteritems():
-            body += 'https://bigpanda.cern.ch/tasks/?username=' + str(i[1]) + '\n'
+            body += 'https://bigpanda.cern.ch/tasks/?username=' + \
+                str(i[1]) + '\n'
         body += '\n If deemed necessary, please contact the user to ask what he/she is doing:\n'
         body += '\nhttps://its.cern.ch/jira/browse/ADCDPA-1'
         body += '\n To change your alerts preferences please use the following link:\n' + u.link
         body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
         A.sendGunMail(test_name, u.email, body)
         # print(body)
-        A.addAlert(test_name, u.name, str(df_a.shape[0]) + ' users with jobs with large retrial attempts.')
+        A.addAlert(test_name, u.name, str(
+            df_a.shape[0]) + ' users with jobs with large retrial attempts.')
 else:
     print('No Alarm')
