@@ -2,21 +2,20 @@
 #
 # Checks number of indexed documents in all perfsonar indices and alerts if any of them is significantly less then usual. It sends mails to all the people substribed to that alert. It is run every 30 min from a cron job.
 
+from elasticsearch import Elasticsearch, exceptions as es_exceptions
+from datetime import datetime, timedelta
+import alerts
+from subscribers import subscribers
+import pandas as pd
+import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use("agg")
-import matplotlib.pyplot as plt
 
 matplotlib.rc('font', **{'size': 12})
 
-import pandas as pd
 
-from subscribers import subscribers
-import alerts
-
-from datetime import datetime, timedelta
-from elasticsearch import Elasticsearch, exceptions as es_exceptions
-# es = Elasticsearch(hosts=['gracc.opensciencegrid.org/q/'], scheme='https', port=443, timeout=60)
-es = Elasticsearch(['https://hcc-gracc.unl.edu/q'])
+es = Elasticsearch(hosts=['gracc.opensciencegrid.org/q/'],
+                   scheme='https', port=443, timeout=300)
 
 # ### define what are the indices to look for
 # first number is interval to check (in hours), second is number in 2 previous intervals, third is number in current interval.
@@ -34,7 +33,8 @@ ps_indices = {
 # There is a time offset here - we do now-9 instead of expected now-1.
 # two reasons: 1. we get data with a delay 2. there is an issue with timezones even data is indexed in UTC.
 
-sub_end = (datetime.utcnow() - timedelta(hours=9)).replace(microsecond=0, second=0, minute=0)
+sub_end = (datetime.utcnow() - timedelta(hours=9)
+           ).replace(microsecond=0, second=0, minute=0)
 print('end of subject period: ', sub_end)
 
 for ind in ps_indices:

@@ -121,7 +121,7 @@ query = {
 }
 
 # execute query
-res = es.search(index="ps_packet_loss", body=query, request_timeout=120)
+res = es.search(index="ps_packetloss", body=query, request_timeout=120)
 # print(res)
 
 
