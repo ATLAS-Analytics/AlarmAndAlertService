@@ -50,11 +50,7 @@ for ind in ps_indices:
 
     types_query = {
         "query": {
-            "bool": {
-                "filter": {
-                    "range": {"timestamp": {"gt": ref_start, 'lte': ref_end}}
-                }
-            }
+            "range": {"timestamp": {"gt": ref_start, 'lte': ref_end}}
         }
     }
 
@@ -63,11 +59,7 @@ for ind in ps_indices:
 
     types_query = {
         "query": {
-            "bool": {
-                "filter": {
-                    "range": {"timestamp": {"gt": ref_end, 'lte': int(sub_end.timestamp() * 1000)}}
-                }
-            }
+            "range": {"timestamp": {"gt": ref_end, 'lte': int(sub_end.timestamp() * 1000)}}
         }
     }
 
