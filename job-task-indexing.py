@@ -28,17 +28,16 @@ print('current time', datetime.now())
 
 
 jobs_query = {
-    "size": 0,
     "query": {
         "range": {"modificationtime": {"gte": startTime, "lte": currentTime}}
     }
 }
 
-res = es.search(index='jobs', body=jobs_query, request_timeout=120)
+res = es.count(index='jobs', body=jobs_query)
 print(res)
 
 
-if res['hits']['total']['value'] == 0:
+if res['count'] == 0:
     S = subscribers()
     A = alerts.alerts()
 
@@ -53,17 +52,16 @@ if res['hits']['total']['value'] == 0:
         A.addAlert(test_name, user.name, str(res))
 
 tasks_query = {
-    "size": 0,
     "query": {
         "range": {"modificationtime": {"gte": startTime, "lte": currentTime}}
     }
 }
 
-res = es.search(index='tasks', body=tasks_query, request_timeout=120)
+res = es.count(index='tasks', body=tasks_query)
 print(res)
 
 
-if res['hits']['total']['value'] == 0:
+if res['count'] == 0:
     S = subscribers()
     A = alerts.alerts()
 
