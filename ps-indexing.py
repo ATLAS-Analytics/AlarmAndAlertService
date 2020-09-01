@@ -54,7 +54,6 @@ for ind in ps_indices:
     ref_end = int(ref_end.timestamp() * 1000)
 
     types_query = {
-        "size": 0,
         "query": {
             "bool": {
                 "filter": {
@@ -64,11 +63,10 @@ for ind in ps_indices:
         }
     }
 
-    res = es.search(index=ind, body=types_query)
-    ps_indices[ind][1] = res['hits']['total']['value']
+    res = es.count(index=ind, body=types_query)
+    ps_indices[ind][1] = res['count']
 
     types_query = {
-        "size": 0,
         "query": {
             "bool": {
                 "filter": {
@@ -78,8 +76,8 @@ for ind in ps_indices:
         }
     }
 
-    res = es.search(index=ind, body=types_query)
-    ps_indices[ind][2] = res['hits']['total']['value']
+    res = es.count(index=ind, body=types_query)
+    ps_indices[ind][2] = res['count']
 
 
 df = pd.DataFrame(ps_indices)
