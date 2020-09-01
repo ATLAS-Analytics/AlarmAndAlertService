@@ -60,7 +60,7 @@ print('current time', curtime)
 # Send a query to the ES-DB for documents containing information of failed queries
 
 es = Elasticsearch(
-    hosts=[{'host': config['ES_HOST']}],
+    hosts=[{'host': config['ES_HOST'], 'scheme':'https'}],
     http_auth=(config['ES_USER'], config['ES_PASS']),
     timeout=60)
 
@@ -219,7 +219,8 @@ if len(frontiersrvr) > 0 or len(taskid) > 0:
     users = S.get_immediate_subscribers(test_name)
     for user in users:
         body = 'Dear ' + user.name + ',\n\n'
-        body += '\tthis mail is to let you know that in the past ' + str(nhours) + ' hours \n'
+        body += '\tthis mail is to let you know that in the past ' + \
+            str(nhours) + ' hours \n'
         if len(frontiersrvr) > 0:
             body += '\tthe following servers present failed queries: \n'
             body += '\t(attached numbers correspond to rejected, disconnected and unprocessed queries) \n\n'
@@ -233,8 +234,12 @@ if len(frontiersrvr) > 0 or len(taskid) > 0:
             body += '\tthe following tasks present not completed requests: \n'
             body += '\n'
             for tkey in taskid:
-                body += 'Task id ' + str(tkey) + ' with name ' + taskid[tkey][0] + ' has ' + str(taskid[tkey][1][0]) + ' rejected '
-                body += str(taskid[tkey][1][1]) + ' disconnected and ' + str(taskid[tkey][1][2]) + ' unprocessed queries \n'
+                body += 'Task id ' + \
+                    str(tkey) + ' with name ' + \
+                    taskid[tkey][0] + ' has ' + \
+                    str(taskid[tkey][1][0]) + ' rejected '
+                body += str(taskid[tkey][1][1]) + ' disconnected and ' + \
+                    str(taskid[tkey][1][2]) + ' unprocessed queries \n'
                 body += 'http://bigpanda.cern.ch/tasknew/' + str(tkey) + '\n'
         body += '\nConsult the following link to get a table with the most relevant taskids (beware that\n'
         body += 'you will have to select the appropriate time period in the upper right corner)\n'
