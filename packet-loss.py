@@ -1,6 +1,6 @@
 # # Check if the packet loss data is abnormal
 
-# This notebook finds out all the links which have at least five packet loss measurements in the past one hour and the average value of the packet loss measurements is greater than 2%. It is run by a cron job every hour, and it will write the detailed information of every alarm into Elastic Search with the _index: alarms-year-month and _type: packetloss.
+# This notebook finds out all the links which have at least five packet loss measurements in the past one hour and the average value of the packet loss measurements is greater than 2%. It is run by a cron job every hour, and it will write the detailed information of every alarm into Elastic Search with the _index: alarms-year-month and type: packetloss.
 
 import sys
 import time
@@ -48,7 +48,6 @@ def generate_doc(src_site_ip, dest_site_ip, measurements, avgpl):
 
     doc = {
         '_index': get_index_name(),
-        '_type': 'doc',
         'type': 'packetloss',
         'src': src_site_ip,
         'dest': dest_site_ip,
