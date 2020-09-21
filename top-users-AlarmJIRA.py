@@ -34,26 +34,26 @@ ind = 'jobs'
 
 s = {
     "size": 0,
-    'query': {
-        'bool': {
-            'must': [
+    "query": {
+        "bool": {
+            "must": [
                 {"term": {"prodsourcelabel": "user"}},
-                {'range': {
-                    'modificationtime': {
+                {"range": {
+                    "modificationtime": {
                         "gte": "now-1d",
                         "lt":  "now"}
                 }
                 },
-                {'bool': {
-                    'must_not': [
+                {"bool": {
+                    "must_not": [
                         {"term": {"produsername": "gangarbt"}},
                         {"term": {"processingtype": "pmerge"}},
                         # only users without workinggroup priviledges
-                        {'exists': {"field": "workinggroup"}}
+                        {"exists": {"field": "workinggroup"}}
                     ]
                 }
                 }
-            ],
+            ]
         }
     },
     "aggs": {
@@ -67,11 +67,10 @@ s = {
                 "walltime_core_sum": {
                     "sum": {
                         "script": {   # use scripted field to calculate corecount
-                            "inline": "def core=doc['actualcorecount'].value; if (core!=null) {return doc['wall_time'].value * core} else {return doc['wall_time'].value}"
+                            "source": " if (doc['actualcorecount'].size()>0) {return doc['wall_time'].value * doc['actualcorecount'].value} else {return doc['wall_time'].value}"
                         }
                     }
-
-                },
+                }
             }
         }
     }
