@@ -107,7 +107,7 @@ if problematic.shape[0] > 0:
                     "Title": 'Current vs Referent time',
                     "Description": "This plot shows number of documents indexed in two intervals. The Current interval is 1h long except for meta data (24h). Referent interval is just before current interval but is twice longer.",
                     "Filename": "Images/Check_perfsonar_indexing.Nebraska.png",
-                    "Link": "https://gracc.opensciencegrid.org/kibana/app/timelion#/AWgu7vTeJcJLTeGoCAKj"
+                    "Link": "https://gracc.opensciencegrid.org/kibana/goto/36ff22ebb4d87256265eb2b889813191"
                 }
             ]
         )
