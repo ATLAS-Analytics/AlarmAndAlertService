@@ -6,6 +6,9 @@ import json
 from elasticsearch import Elasticsearch, exceptions as es_exceptions
 from elasticsearch.helpers import scan, bulk
 from datetime import datetime
+import pandas as pd
+import matplotlib
+import matplotlib.pyplot as plt
 
 with open('/config/config.json') as json_data:
     config = json.load(json_data,)
@@ -44,14 +47,30 @@ query = {
 }
 
 docs_read = 0
+data = {}
 scroll = scan(client=es, index=indices, query=query, timeout="5m")
 for res in scroll:
     docs_read += 1
     if not docs_read % 500:
         print('docs read', docs_read)
-    # if res['_id'] in ids:
-        # ids[res['_id']].append(res['_index'])
-    # else:
-        # ids[res['_id']] = [res['_index']]
+    d = res['_source']['taskparams']
+    if not 'userName' in d or not 'excludedSite' in d:
+        continue
+    uN = d['userName']
+    eS = d['excludedSite']
+    if not eS:
+        continue
+    if uN not in data:
+        data[uN] = {'tasks': 0, 'sites excluded': 0}
+    data[uN]['tasks'] += 1
+    data[uN]['sites excluded'] += len(eS)
+print(data)
+df = pd.DataFrame(data).transpose()
+df['ratio'] = df['sites excluded']/df.tasks
+df.plot(kind="bar")
+fig = matplotlib.pyplot.gcf()
+fig.set_size_inches(6, 6)
+plt.tight_layout()
+plt.savefig('mayuko.png')
 
 print('read:', docs_read)
