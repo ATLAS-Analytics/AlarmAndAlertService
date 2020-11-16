@@ -6,6 +6,7 @@
 import sys
 import subscribers
 import alerts
+import alarms
 import requests
 
 import json
@@ -24,6 +25,7 @@ if res['status'] == 'green':
 
 S = subscribers.subscribers()
 A = alerts.alerts()
+ALARM = alarms.alarms()
 
 if res['status'] == 'red':
     testName = 'Alert on Elastic cluster state [ES in red]'
@@ -35,10 +37,14 @@ if res['status'] == 'red':
         body = body + '\n\n To change your alerts preferences please you the following link:\n' + subscriber.link
         print(subscriber.to_string())
         A.sendGunMail(testName, subscriber.email, body)
-        A.addAlert(testName, subscriber.name, 'simply red.')
+        # A.addAlert(testName, subscriber.name, 'simply red.')
+    ALARM.addAlarm('Analytics', 'Elasticsearch', 'status',
+                   body='Simply red.', tags=['red'])
 if res['status'] == 'yellow' and res['unassigned_shards'] > 10:
     testName = 'Alert on Elastic cluster state [ES in yellow]'
     subscribersToYellow = S.get_immediate_subscribers(testName)
+    msg = str(res['unassigned_shards']) + ' unassigned shards on ' + \
+        str(res['number_of_nodes']) + ' nodes.'
     for subscriber in subscribersToYellow:
         body = 'Dear ' + subscriber.name + ',\n\n'
         body = body + '\tthis mail is to let you that the University of Chicago Elasticsearch cluster is in YELLOW.'
@@ -49,5 +55,8 @@ if res['status'] == 'yellow' and res['unassigned_shards'] > 10:
         body = body + '\n\n To change your alerts preferences please you the following link:\n' + subscriber.link
         print(subscriber.to_string())
         A.sendGunMail(testName, subscriber.email, body)
-        A.addAlert(testName, subscriber.name, str(res['unassigned_shards']) +
-                   ' unassigned shards on ' + str(res['number_of_nodes']) + ' nodes.')
+
+        # A.addAlert(testName, subscriber.name, msg)
+
+    ALARM.addAlarm('Analytics', 'Elasticsearch',
+                   'status', body=msg, tags=['yellow'])

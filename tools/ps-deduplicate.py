@@ -21,8 +21,8 @@ else:
     print('no connection to ES.')
     sys.exit(1)
 
-start_int = '2020-10-01 01:00'
-stop_int = '2020-10-01 02:00'
+start_int = '2020-11-04 00:00'
+stop_int = '2020-11-06 00:00'
 start_dt = datetime.strptime(start_int, '%Y-%m-%d %H:%M')
 stop_dt = datetime.strptime(stop_int, '%Y-%m-%d %H:%M')
 print('start:', start_dt, '\nstop: ', stop_dt)
