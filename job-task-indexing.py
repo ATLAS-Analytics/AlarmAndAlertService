@@ -6,6 +6,7 @@ from datetime import datetime
 
 from subscribers import subscribers
 import alerts
+from alarms import alarms
 
 from elasticsearch import Elasticsearch, exceptions as es_exceptions
 
@@ -18,6 +19,10 @@ es = Elasticsearch(
     hosts=[{'host': config['ES_HOST'], 'scheme':'https'}],
     http_auth=(config['ES_USER'], config['ES_PASS']),
     timeout=60)
+
+
+A = alerts.alerts()
+ALARM = alarms('Analytics', 'WFMS', 'indexing')
 
 ct = datetime.now()
 currentTime = int(round(datetime.now().timestamp() * 1000))
@@ -39,7 +44,7 @@ print(res)
 
 if res['count'] == 0:
     S = subscribers()
-    A = alerts.alerts()
+    ALARM.addAlarm(body='Issue in indexing jobs.', tags=['jobs'])
 
     test_name = 'Alert on Elastic indexing rate [Panda Jobs]'
     users = S.get_immediate_subscribers(test_name)
@@ -49,7 +54,7 @@ if res['count'] == 0:
         body += '\nBest regards,\nATLAS AAS'
         body += '\n\n To change your alerts preferences please you the following link:\n' + user.link
         A.sendGunMail(test_name, user.email, body)
-        A.addAlert(test_name, user.name, str(res))
+        # A.addAlert(test_name, user.name, str(res))
 
 tasks_query = {
     "query": {
@@ -64,6 +69,7 @@ print(res)
 if res['count'] == 0:
     S = subscribers()
     A = alerts.alerts()
+    ALARM.addAlarm(body='Issue in indexing tasks.', tags=['tasks'])
 
     test_name = 'Alert on Elastic indexing rate [Panda Tasks]'
     users = S.get_immediate_subscribers(test_name)
@@ -73,4 +79,30 @@ if res['count'] == 0:
         body += '\nBest regards,\nATLAS AAS'
         body += '\n\n To change your alerts preferences please you the following link:\n' + user.link
         A.sendGunMail(test_name, user.email, body)
-        A.addAlert(test_name, user.name, str(res))
+        # A.addAlert(test_name, user.name, str(res))
+
+task_params_query = {
+    "query": {
+        "range": {"modificationtime": {"gte": startTime, "lte": currentTime}}
+    }
+}
+
+res = es.count(index='task_parameters', body=tasks_query)
+print(res)
+
+
+if res['count'] == 0:
+    S = subscribers()
+    A = alerts.alerts()
+    ALARM.addAlarm(body='Issue in indexing task parameters.',
+                   tags=['task parameters'])
+
+    test_name = 'Alert on Elastic indexing rate [Panda Task Parameters]'
+    users = S.get_immediate_subscribers(test_name)
+    for user in users:
+        body = 'Dear ' + user.name + ',\n\n'
+        body += '\tthis mail is to let you that there is an issue in indexing Jedi task parameters data in UC Elasticsearch.\n'
+        body += '\nBest regards,\nATLAS AAS'
+        body += '\n\n To change your alerts preferences please you the following link:\n' + user.link
+        A.sendGunMail(test_name, user.email, body)
+        # A.addAlert(test_name, user.name, str(res))

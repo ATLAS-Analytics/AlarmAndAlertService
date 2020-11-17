@@ -6,6 +6,7 @@ import json
 from elasticsearch import Elasticsearch, exceptions as es_exceptions
 from datetime import datetime, timedelta
 import alerts
+from alarms import alarms
 from subscribers import subscribers
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -96,6 +97,8 @@ print(problematic.head(10))
 if problematic.shape[0] > 0:
     S = subscribers()
     A = alerts.alerts()
+    ALARM = alarms('Networking', 'Perfsonar', 'indexing')
+    ALARM.addAlarm(body='', tags='UC')
 
     test_name = 'Alert on Elastic indexing rate [PerfSonar]'
     users = S.get_immediate_subscribers(test_name)

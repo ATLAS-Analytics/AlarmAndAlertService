@@ -6,7 +6,7 @@
 import sys
 import subscribers
 import alerts
-import alarms
+from alarms import alarms
 import requests
 
 import json
@@ -25,7 +25,7 @@ if res['status'] == 'green':
 
 S = subscribers.subscribers()
 A = alerts.alerts()
-ALARM = alarms.alarms()
+ALARM = alarms('Analytics', 'Elasticsearch', 'status')
 
 if res['status'] == 'red':
     testName = 'Alert on Elastic cluster state [ES in red]'
@@ -38,8 +38,7 @@ if res['status'] == 'red':
         print(subscriber.to_string())
         A.sendGunMail(testName, subscriber.email, body)
         # A.addAlert(testName, subscriber.name, 'simply red.')
-    ALARM.addAlarm('Analytics', 'Elasticsearch', 'status',
-                   body='Simply red.', tags=['red'])
+    ALARM.addAlarm(body='Simply red.', tags=['red'])
 if res['status'] == 'yellow' and res['unassigned_shards'] > 10:
     testName = 'Alert on Elastic cluster state [ES in yellow]'
     subscribersToYellow = S.get_immediate_subscribers(testName)
@@ -58,5 +57,4 @@ if res['status'] == 'yellow' and res['unassigned_shards'] > 10:
 
         # A.addAlert(testName, subscriber.name, msg)
 
-    ALARM.addAlarm('Analytics', 'Elasticsearch',
-                   'status', body=msg, tags=['yellow'])
+    ALARM.addAlarm(body=msg, tags=['yellow'])
