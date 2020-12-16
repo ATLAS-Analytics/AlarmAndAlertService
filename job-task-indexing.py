@@ -83,7 +83,7 @@ if res['count'] == 0:
 
 task_params_query = {
     "query": {
-        "range": {"modificationtime": {"gte": startTime, "lte": currentTime}}
+        "range": {"creationdate": {"gte": startTime, "lte": currentTime}}
     }
 }
 
