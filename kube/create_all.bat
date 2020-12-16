@@ -15,7 +15,7 @@ kubectl create -f ./frontier-failed-q.yaml
 kubectl create -f ./frontier-threads.yaml
 kubectl create -f ./fts-aggregator.yaml
 kubectl create -f ./job-task-indexing.yaml
-kubectl create -f ./packet-loss.yaml
+@REM kubectl create -f ./packet-loss.yaml
 kubectl create -f ./ps-indexing.yaml
 kubectl create -f ./sending-mails.yaml
 kubectl create -f ./top-users.yaml
