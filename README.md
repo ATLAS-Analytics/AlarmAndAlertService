@@ -1,7 +1,9 @@
 # AlarmAndAlertService
-For all ATLAS alarm &amp; alert codes. 
 
-## Alert list
+For all ATLAS alarm &amp; alert codes.
+
+## Alarm list
+
 * sending mails
 * packet loss
 * jobs and task indexing
@@ -11,3 +13,6 @@ For all ATLAS alarm &amp; alert codes.
 * User reports
 
 ## TO DO
+
+* To all alarms add a field that contains mail template.
+* Make alert generation a separate code. Run it in a separate cron job.
