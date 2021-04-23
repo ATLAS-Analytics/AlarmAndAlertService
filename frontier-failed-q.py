@@ -11,7 +11,7 @@
 import sys
 import datetime
 from alerts import alarms
-from elasticsearch import Elasticsearch, exceptions as es_exceptions
+from elasticsearch import Elasticsearch
 # from elasticsearch.helpers import scan
 
 
@@ -137,7 +137,7 @@ my_query = {
     }
 }
 
-res = es.search(index=ind, body=my_query, request_timeout=600)
+res = es.search(index=ind, body=my_query)
 res = res['aggregations']['servers']['buckets']
 
 taskinfo = {}

@@ -89,7 +89,7 @@ my_query = {
     }
 }
 
-res = es.search(index=ind, body=my_query, request_timeout=600)
+res = es.search(index=ind, body=my_query)
 
 frontiersrvr = {}
 res = res['aggregations']['servers']['buckets']
