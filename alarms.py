@@ -1,6 +1,11 @@
 import requests
 import json
-host = 'https://aaas.atlas-ml.org/alarm/'
+
+config_path = '/config/config.json'
+config_path = 'kube/secrets/config.json'
+
+with open(config_path) as json_data:
+    config = json.load(json_data,)
 
 
 class alarms:
@@ -17,6 +22,9 @@ class alarms:
             "body": body,
             "tags": tags
         }
-        res = requests.post(host, json=js)
-        print(res)
-        print(res.status_code)
+        res = requests.post(config['AAAS'] + '/alarm', json=js)
+        if (res.status_code == 200):
+            print('created alarm: {}:{}:{} {} {}'.format(
+                self.category, self.subcategory, self.event, body, tags))
+        else:
+            print('problem in creating alarm!')
