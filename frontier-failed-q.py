@@ -2,18 +2,17 @@
 # ====
 # This notebook checks if there are failed queries:
 # - Rejected queries: server is busy and doesn't respond to the query
-# - DB disconnections: the query was processed by the Frontier server but the Oracle DB terminated the connection
+# - DB disconnections: the query was processed by the Frontier server but the Oracle DB
+#   terminated the connection
 # - Unprocessed queries: Oracle DB returned data, but it wasn't sent to the querying job
 #
-# It sends mails to all the people substribed to that alert. It is run every half an hour from a cron job (not yet).
+# It is run every hour from a cron job.
 
+import sys
 import datetime
-
-from subscribers import subscribers
-import alerts
-
+from alerts import alarms
 from elasticsearch import Elasticsearch, exceptions as es_exceptions
-from elasticsearch.helpers import scan
+# from elasticsearch.helpers import scan
 
 
 import json
@@ -29,8 +28,8 @@ ntotfail = 100
 ntottask = 100
 
 # Following 2 lines are for testing purposes only
-#curtime = '20170126T120000.000Z'
-#ct = datetime.datetime.strptime(curtime, "%Y%m%dT%H%M%S.%fZ")
+# curtime = '20170126T120000.000Z'
+# ct = datetime.datetime.strptime(curtime, "%Y%m%dT%H%M%S.%fZ")
 
 
 # ### Get starting and current time for query interval
@@ -63,6 +62,12 @@ es = Elasticsearch(
     hosts=[{'host': config['ES_HOST'], 'scheme':'https'}],
     http_auth=(config['ES_USER'], config['ES_PASS']),
     timeout=60)
+
+if es.ping():
+    print('connected to ES.')
+else:
+    print('no connection to ES.')
+    sys.exit(1)
 
 condition = 'rejected:true OR disconn:true OR procerror:true'
 
@@ -208,73 +213,38 @@ print('problematic servers:', frontiersrvr)
 #
 # The alert contains every Frontier server with failed queries and which kind of failures happened.
 
-# In[198]:
-
 
 if len(frontiersrvr) > 0 or len(taskid) > 0:
-    S = subscribers()
-    A = alerts.alerts()
 
-    test_name = 'Failed queries'
-    users = S.get_immediate_subscribers(test_name)
-    for user in users:
-        body = 'Dear ' + user.name + ',\n\n'
-        body += '\tthis mail is to let you know that in the past ' + \
-            str(nhours) + ' hours \n'
-        if len(frontiersrvr) > 0:
-            body += '\tthe following servers present failed queries: \n'
-            body += '\t(attached numbers correspond to rejected, disconnected and unprocessed queries) \n\n'
-            for fkey in frontiersrvr:
-                body += fkey
-                body += ' : '
-                body += frontiersrvr[fkey]
-                body += '\n'
-        body += '\n'
-        if len(taskid) > 0:
-            body += '\tthe following tasks present not completed requests: \n'
-            body += '\n'
-            for tkey in taskid:
-                body += 'Task id ' + \
-                    str(tkey) + ' with name ' + \
-                    taskid[tkey][0] + ' has ' + \
-                    str(taskid[tkey][1][0]) + ' rejected '
-                body += str(taskid[tkey][1][1]) + ' disconnected and ' + \
-                    str(taskid[tkey][1][2]) + ' unprocessed queries \n'
-                body += 'http://bigpanda.cern.ch/tasknew/' + str(tkey) + '\n'
-        body += '\nConsult the following link to get a table with the most relevant taskids (beware that\n'
-        body += 'you will have to select the appropriate time period in the upper right corner)\n'
-        body += 'https://atlas-kibana.mwt2.org:5601/s/frontier/goto/c72d263c3e2b86f394ab99211c99b613\n'
-        body += '\nBest regards,\nATLAS AAS'
-        body += '\n\n To change your alerts preferences please use the following link:\n' + user.link
+    ALARM = alarms('Analytics', 'Frontier', 'Failed queries')
+    ALARM.addAlarm(
+        body='Failed Frontier queries',
+        tags=frontiersrvr,
+        source={'servers:': frontiersrvr, 'tasks': taskid}
+    )
 
-        A.sendGunMail(test_name, user.email, body)
-#        A.addAlert(test_name, user.name, str(res_page))
-#    A.sendMail(test_name, "julio.lozano.bahilo@cern.ch", body)
-
-#### BULSHIT ####
-# # Defining the time period
-# endtime_start_unix = 1520833680
-# endtime_final_unix = 1520833800
-# # Format for the elastic search
-# endtime_start = datetime.datetime.fromtimestamp(int(endtime_start_unix)).strftime('%Y-%m-%dT%H:%M:%S.000Z')
-# endtime_final = datetime.datetime.fromtimestamp(int(endtime_final_unix)).strftime('%Y-%m-%dT%H:%M:%S.000Z')
-
-# print(endtime_start)
-# print(endtime_final)
-
-# myquery = {
-#     "size": 10,
-#     "query": {
-#         "query_string": {
-#             "query": "taskid:13251481",
-#             "analyze_wildcard": True,
-#             "lowercase_expanded_terms": False,
-#         }
-#     },
-#     # "stored_fields": ["superstatus"]
-# }
-
-# res = es.search(index='frontier-new-*', body=myquery, request_timeout=600)
-# print(len(res['hits']['hits']))
-# for ientry in range(len(res['hits']['hits'])):
-#     print(res['hits']['hits'][ientry]['_source']['sqlquery'])
+    #   body += '\tthis mail is to let you know that in the past ' + \
+    #        str(nhours) + ' hours \n'
+    #    if len(frontiersrvr) > 0:
+    #         body += '\tthe following servers present failed queries: \n'
+    #         body += '\t(attached numbers correspond to rejected, disconnected and unprocessed queries) \n\n'
+    #         for fkey in frontiersrvr:
+    #             body += fkey
+    #             body += ' : '
+    #             body += frontiersrvr[fkey]
+    #             body += '\n'
+    #     body += '\n'
+    #     if len(taskid) > 0:
+    #         body += '\tthe following tasks present not completed requests: \n'
+    #         body += '\n'
+    #         for tkey in taskid:
+    #             body += 'Task id ' + \
+    #                 str(tkey) + ' with name ' + \
+    #                 taskid[tkey][0] + ' has ' + \
+    #                 str(taskid[tkey][1][0]) + ' rejected '
+    #             body += str(taskid[tkey][1][1]) + ' disconnected and ' + \
+    #                 str(taskid[tkey][1][2]) + ' unprocessed queries \n'
+    #             body += 'http://bigpanda.cern.ch/tasknew/' + str(tkey) + '\n'
+    #     body += '\nConsult the following link to get a table with the most relevant taskids (beware that\n'
+    #     body += 'you will have to select the appropriate time period in the upper right corner)\n'
+    #     body += 'https://atlas-kibana.mwt2.org:5601/s/frontier/goto/c72d263c3e2b86f394ab99211c99b613\n'

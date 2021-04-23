@@ -63,3 +63,29 @@ For all ATLAS alarm &amp; alert codes.
 
         print(user.to_string())
         A.addAlert(test_name, user.name, 'just an issue.')
+
+
+
+    subscribersToRed = S.get_immediate_subscribers(testName)
+    for subscriber in subscribersToRed:
+        body = 'Dear ' + subscriber.name + ',\n\n'
+        body = body + '\tthis mail is to let you that the University of Chicago Elasticsearch cluster is in RED.\n'
+        body = body + '\nBest regards,\nATLAS AAS'
+        body = body + '\n\n To change your alerts preferences please you the following link:\n' + subscriber.link
+        print(subscriber.to_string())
+        A.sendGunMail(testName, subscriber.email, body)
+
+    
+    subscribersToYellow = S.get_immediate_subscribers(testName)
+    msg = str(res['unassigned_shards']) + ' unassigned shards on ' + \
+        str(res['number_of_nodes']) + ' nodes.'
+    for subscriber in subscribersToYellow:
+        body = 'Dear ' + subscriber.name + ',\n\n'
+        body = body + '\tthis mail is to let you that the University of Chicago Elasticsearch cluster is in YELLOW.'
+        body = body + 'There is ' + \
+            str(res['unassigned_shards']) + ' unassigned shards on ' + \
+            str(res['number_of_nodes']) + ' nodes.\n'
+        body = body + '\nBest regards,\nATLAS AAS'
+        body = body + '\n\n To change your alerts preferences please you the following link:\n' + subscriber.link
+        print(subscriber.to_string())
+        A.sendGunMail(testName, subscriber.email, body)

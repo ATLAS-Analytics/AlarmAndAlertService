@@ -22,6 +22,8 @@ class alarms:
         self.check_it()
 
     def check_it(self):
+        if not categories:
+            return
         found = False
         for c in categories:
             if (c['category'] == self.category and
@@ -32,7 +34,7 @@ class alarms:
         if not found:
             print('ERROR This category does not exist any more!')
 
-    def addAlarm(self, body, tags=[]):
+    def addAlarm(self, body, tags=[], source=None, level=None):
         js = {
             "category": self.category,
             "subcategory": self.subcategory,
@@ -40,6 +42,10 @@ class alarms:
             "body": body,
             "tags": tags
         }
+        if source:
+            js['source'] = source
+        if level:
+            js['level'] = level
         res = requests.post(config['AAAS'] + '/alarm', json=js)
         if (res.status_code == 200):
             print('created alarm: {}:{}:{} {} {}'.format(
