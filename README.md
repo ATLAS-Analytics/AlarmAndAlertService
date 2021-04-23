@@ -42,3 +42,24 @@ For all ATLAS alarm &amp; alert codes.
         body += '\nBest regards,\nATLAS AAS'
         body += '\n\n To change your alerts preferences please you the following link:\n' + user.link
         A.sendGunMail(test_name, user.email, body)
+
+    for user in users:
+        body = 'Dear ' + user.name + ',\n\n'
+        body += '\tthis mail is to let you know that there is an issue in indexing Perfsonar data in UC Elasticsearch.\n'
+        A.send_GUN_HTML_mail(
+            'Networking alert',
+            user.email,
+            body,
+            subtitle=test_name,
+            images=[
+                {
+                    "Title": 'Current vs Referent time',
+                    "Description": "This plot shows number of documents indexed in two intervals. The Current interval is 1h long except for meta data (24h). Referent interval is just before current interval but is twice longer.",
+                    "Filename": "Images/Check_perfsonar_indexing.png",
+                    "Link": "https://atlas-kibana.mwt2.org/s/networking/app/kibana#/visualize/edit/58bf3e80-18d1-11e8-8f2f-ab6704660c79?_g=(refreshInterval%3A(pause%3A!t%2Cvalue%3A0)%2Ctime%3A(from%3Anow-7d%2Cmode%3Aquick%2Cto%3Anow))"
+                }
+            ]
+        )
+
+        print(user.to_string())
+        A.addAlert(test_name, user.name, 'just an issue.')

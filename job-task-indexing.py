@@ -6,7 +6,7 @@
 import sys
 import json
 from datetime import datetime
-from alarms import alarms
+from alerts import alarms
 from elasticsearch import Elasticsearch, exceptions as es_exceptions
 
 

@@ -1,139 +1,165 @@
 import os
-import requests
-import httplib2
-import json
 import time
-from oauth2client.service_account import ServiceAccountCredentials
-from apiclient import discovery
-import oauth2client
-from oauth2client import client
-from oauth2client import tools
+import requests
+import json
 
-from email.mime.text import MIMEText
-from email.mime.image import MIMEImage
-from email.mime.multipart import MIMEMultipart
+config_path = '/config/config.json'
+# config_path = 'kube/secrets/config.json'
+mailgun_api_key = os.environ['MAILGUN_API_KEY']
 
-from subprocess import Popen, PIPE
+with open(config_path) as json_data:
+    config = json.load(json_data,)
+
+categories = []
 
 
-class alerts:
+class alarms:
+    def __init__(self, category, subcategory, event):
+        self.category = category
+        self.subcategory = subcategory
+        self.event = event
+        self.template = ''
+        self.check_it()
 
-    def __init__(self):
-        SCOPE = ["https://spreadsheets.google.com/feeds"]
-        SECRETS_FILE = "/secrets/AlertingService-879d85ad058f.json"
-        credentials = ServiceAccountCredentials.from_json_keyfile_name(SECRETS_FILE, SCOPE)
-        http = credentials.authorize(httplib2.Http())
-        discoveryUrl = 'https://sheets.googleapis.com/$discovery/rest?version=v4'
-        self.service = discovery.build('sheets', 'v4', http=http, discoveryServiceUrl=discoveryUrl)
-        return
+    def check_it(self):
+        found = False
+        for c in categories:
+            if (c['category'] == self.category and
+                    c['subcategory'] == self.subcategory and c['event'] == self.event):
+                found = True
+                if 'template' in c:
+                    self.template = c['template']
+        if not found:
+            print('ERROR This category does not exist any more!')
 
-    def addAlert(self, test, email, text):
-        spreadsheetId = '19bS4cxqBEwr_cnCEfAkbaLo9nCLjWnTnhQHsZGK9TYU'
-        rangeName = test + '!A1:C1'
-        myBody = {u'range': rangeName, u'values': [[time.strftime("%Y/%m/%d %H:%M:%S"), email, text]], u'majorDimension': u'ROWS'}
-        cells = self.service.spreadsheets().values().append(spreadsheetId=spreadsheetId, range=rangeName,
-                                                            valueInputOption='RAW', insertDataOption='INSERT_ROWS', body=myBody).execute()
-        return
+    def addAlarm(self, body, tags=[]):
+        js = {
+            "category": self.category,
+            "subcategory": self.subcategory,
+            "event": self.event,
+            "body": body,
+            "tags": tags
+        }
+        res = requests.post(config['AAAS'] + '/alarm', json=js)
+        if (res.status_code == 200):
+            print('created alarm: {}:{}:{} {} {}'.format(
+                self.category, self.subcategory, self.event, body, tags))
+        else:
+            print('problem in creating alarm!')
 
-    def sendMail(self, test, to, body):
-        msg = MIMEText(body)
-        msg['Subject'] = test
-        msg['From'] = 'AAAS@mwt2.org'
-        msg['To'] = to
+    def getAlarms(self, period):
+        js = {
+            "category": self.category,
+            "subcategory": self.subcategory,
+            "event": self.event,
+            "period": period
+        }
+        res = requests.post(config['AAAS'] + '/alarm/fetch', json=js)
+        if (res.status_code == 200):
+            data = res.json()
+            print('recieved {} alarms'.format(len(data)))
+            return data
+        print('problem in receiving alarms!')
 
-        p = Popen(["/usr/sbin/sendmail", "-t", "-oi", "-r AAAS@mwt2.org"], stdin=PIPE)
-        print(msg.as_string())
-        p.communicate(msg.as_string().encode('utf-8'))
+    def getText(self, data):
+        res = ''
+        res += time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(data['created_at']/1000))
+        res += '\t{}/{}/{}\t\t{}\n'.format(data['category'],
+                                           data['subcategory'], data['event'], data['body'])
+        if data['tags']:
+            res += 'tags: {}\n'.format(', '.join(data['tags']))
+        if 'level' in data:
+            res += 'Level: {}\n'.format(data['level'])
+        if self.template and 'source' in data:
+            vars = data['source']
+            temp = self.template
+            for v in vars:
+                if '%{'+v+'}' in temp:
+                    temp = temp.replace('%{'+v+'}', str(vars[v]))
+            res += temp
+        # print(data)
+        return res
 
-    def sendGunMail(self, test, to, body):
+
+class user:
+    def __init__(self, data):
+        self.id = data['_id']
+        self.username = data['_source']['username']
+        self.user = data['_source']['user']
+        self.email = data['_source']['email']
+        self.subscriptions = data['_source']['subscriptions']
+        self.preferences = data['_source']['preferences']
+        self.mail = ''
+
+    def __str__(self):
+        out = '{} {} preferences: {}\nsubs:\n'.format(self.user, self.email, self.preferences)
+        for s in self.subscriptions:
+            out += ('\t'+str(s)+'\n')
+        return out
+
+    def addAlert(self, body):
+        self.mail += body+'\n\n'
+
+    def addHeaderFooter(self):
+        header = 'Dear '+self.user+',\n\n\t'
+        header += 'Herewith a list of alarms you subscribed to. '
+        header += 'You may change preferences by visiting '+config['AAAS']+'.\n'
+        footer = 'Best regards,\n Alarm & Alert Service Team'
+        self.mail = header+self.mail+footer
+
+    def sendMail(self):
+        if not self.mail:
+            return
+        self.addHeaderFooter()
+        print(self.mail)
         requests.post(
             "https://api.mailgun.net/v3/analytics.mwt2.org/messages",
-            auth=("api", os.environ['MAILGUN_API_KEY']),
+            auth=("api", mailgun_api_key),
             data={
                 "from": "ATLAS Alarm & Alert System <aaas@analytics.mwt2.org>",
-                "to": [to],
-                "subject": test,
-                "text": body}
+                "to": [self.email],
+                "subject": 'Alarm & Alert System delivery',
+                "text": self.mail}
         )
 
-    def send_HTML_mail(self, test, to, body, subtitle="", images=[]):
-        msg = MIMEMultipart('related')
-        msg['Subject'] = test
-        msg['From'] = 'AAAS@mwt2.org'
-        msg['To'] = to
 
-        msgAlternative = MIMEMultipart('alternative')
-        msg.attach(msgAlternative)
+def getCategories():
+    global categories
+    res = requests.get(config['AAAS'] + '/alarm/categories')
+    if (res.status_code == 200):
+        categories = res.json()
+        # print(categories)
+        print('recieved {} categories'.format(len(categories)))
+    else:
+        print('problem in receiving categories!')
 
-        html = open("index.htm", "r").read()
-        image_template = open("image_template.htm", "r").read()
 
-        html = html.replace('TheMainTitle', test)
-        html = html.replace('TheSubtitle', subtitle)
-        html = html.replace('MyBody', body)
+def getUsers():
+    res = requests.get(config['AAAS'] + '/user')
+    users = []
+    if (res.status_code == 200):
+        data = res.json()
+        for udata in data:
+            u = user(udata)
+            print(u)
+            users.append(u)
+        print('recieved {} users'.format(len(users)))
+        return users
+    print('problem in receiving users!')
 
-        html = html.replace('TheImagePlaceholder1', image_template * int((len(images) + 1) / 2))
-        html = html.replace('TheImagePlaceholder2', image_template * int(len(images) / 2))
 
-        for ind, i in enumerate(images):
-            #print("Adding image:", i)
-            html = html.replace('FigureTitle', i['Title'], 2)  # appears twice per figure
-            html = html.replace('FigureFilename', "cid:image" + str(ind), 1)
-            html = html.replace('FigureDescription', i['Description'], 1)
-            link = ''
-            if 'Link' in i:
-                link = i['Link']
-            html = html.replace('FigureLink', link, 1)
+if __name__ == '__main__':
+    getCategories()
+    users = getUsers()
+    for u in users:
+        if u.preferences['vacation']:
+            continue
 
-            img_data = open(i['Filename'], 'rb').read()
-            image = MIMEImage(img_data, name=i['Filename'])
-            image.add_header('Content-ID', '<image' + str(ind) + '>')
-            msg.attach(image)
+        for s in u.subscriptions:
+            a = alarms(s['category'], s['subcategory'], s['event'])
+            als = a.getAlarms(24)
+            for al in als:
+                alert_text = a.getText(al)
+                u.addAlert(alert_text)
 
-        # Record the MIME types of both parts - text/plain and text/html.
-        part1 = MIMEText(body, 'plain')
-        part2 = MIMEText(html, 'html')
-
-        msgAlternative.attach(part1)
-        msgAlternative.attach(part2)
-
-        p = Popen(["/usr/sbin/sendmail", "-t", "-oi", "-r AAAS@mwt2.org"], stdin=PIPE)
-        # print(msg.as_string())
-        p.communicate(msg.as_string().encode('utf-8'))
-
-    def send_GUN_HTML_mail(self, test, to, body, subtitle="", images=[]):
-
-        html = open("index.htm", "r").read()
-        image_template = open("image_template.htm", "r").read()
-
-        html = html.replace('TheMainTitle', test)
-        html = html.replace('TheSubtitle', subtitle)
-        html = html.replace('MyBody', body)
-
-        html = html.replace('TheImagePlaceholder1', image_template * int((len(images) + 1) / 2))
-        html = html.replace('TheImagePlaceholder2', image_template * int(len(images) / 2))
-
-        ims = []
-        for ind, i in enumerate(images):
-            #print("Adding image:", i)
-            html = html.replace('FigureTitle', i['Title'], 2)  # appears twice per figure
-            html = html.replace('FigureFilename', "cid:image" + str(ind), 1)
-            html = html.replace('FigureDescription', i['Description'], 1)
-            link = ''
-            if 'Link' in i:
-                link = i['Link']
-            html = html.replace('FigureLink', link, 1)
-            ims.append(("inline", ("image" + str(ind), open(i['Filename'], 'rb').read())))
-
-        requests.post(
-            "https://api.mailgun.net/v3/analytics.mwt2.org/messages",
-            auth=("api", os.environ['MAILGUN_API_KEY']),
-            files=ims,
-            data={
-                "from": "ATLAS Alarm & Alert System <aaas@analytics.mwt2.org>",
-                "to": [to],
-                "subject": test,
-                "text": body,
-                "html": html
-            }
-        )
+        u.sendMail()
