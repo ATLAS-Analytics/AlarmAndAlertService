@@ -11,7 +11,7 @@ from elasticsearch import Elasticsearch, exceptions as es_exceptions
 
 
 config_path = '/config/config.json'
-config_path = 'kube/secrets/config.json'
+# config_path = 'kube/secrets/config.json'
 
 with open(config_path) as json_data:
     config = json.load(json_data,)
