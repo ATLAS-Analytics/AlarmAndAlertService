@@ -72,7 +72,7 @@ class alarms:
         res += time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(data['created_at']/1000))
         res += '\t{}/{}/{}\t\t{}\n'.format(data['category'],
                                            data['subcategory'], data['event'], data['body'])
-        if data['tags']:
+        if 'tags' in data:
             res += 'tags: {}\n'.format(', '.join(data['tags']))
         if 'level' in data:
             res += 'Level: {}\n'.format(data['level'])
