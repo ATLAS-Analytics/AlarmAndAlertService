@@ -52,6 +52,7 @@ class alarms:
                 self.category, self.subcategory, self.event, body, tags))
         else:
             print('problem in creating alarm!')
+            print(res.text, res.status_code)
 
     def getAlarms(self, period):
         js = {
