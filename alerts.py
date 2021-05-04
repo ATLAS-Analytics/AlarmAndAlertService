@@ -33,6 +33,7 @@ class alarms:
                     self.template = c['template']
         if not found:
             print('ERROR This category does not exist any more!')
+            raise ValueError('This category does not exist any more!')
 
     def addAlarm(self, body, tags=[], source=None, level=None):
         js = {
@@ -163,7 +164,11 @@ if __name__ == '__main__':
             continue
 
         for s in u.subscriptions:
-            a = alarms(s['category'], s['subcategory'], s['event'])
+            try:
+                a = alarms(s['category'], s['subcategory'], s['event'])
+            except ValueError:
+                print('missing:', s['category'], s['subcategory'], s['event'])
+                continue
             als = a.getAlarms(24)
             for al in als:
                 alert_text = a.getText(al)
