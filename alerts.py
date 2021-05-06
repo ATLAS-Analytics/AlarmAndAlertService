@@ -169,7 +169,7 @@ if __name__ == '__main__':
             except ValueError:
                 print('missing:', s['category'], s['subcategory'], s['event'])
                 continue
-            als = a.getAlarms(24)
+            als = a.getAlarms(6)
             for al in als:
                 alert_text = a.getText(al)
                 u.addAlert(alert_text)
