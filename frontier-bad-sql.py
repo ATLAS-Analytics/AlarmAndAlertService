@@ -115,5 +115,5 @@ if len(tkids) > 0:
     ALARM = alarms('Analytics', 'Frontier', 'Bad SQL queries')
     ALARM.addAlarm(
         body='Bad SQL queries',
-        source={'users': users, 'tkids': tkids}
+        source={'users': json.dumps(users), 'tkids': json.dumps(tkids)}
     )
