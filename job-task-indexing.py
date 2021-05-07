@@ -73,7 +73,7 @@ task_params_query = {
     }
 }
 
-res = es.count(index='task_parameters', body=tasks_query)
+res = es.count(index='task_parameters', body=task_params_query)
 print(res)
 if res['count'] == 0:
     ALARM.addAlarm(body='Issue in indexing task parameters.',
