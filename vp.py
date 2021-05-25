@@ -5,9 +5,9 @@
 
 import sys
 import json
-from datetime import datetime, time
+from datetime import datetime
 from alerts import alarms
-from elasticsearch import Elasticsearch, exceptions as es_exceptions
+from elasticsearch import Elasticsearch
 
 
 config_path = '/config/config.json'
