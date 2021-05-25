@@ -12,6 +12,7 @@ kubectl create -f ./frontier-threads.yaml
 @REM kubectl create -f ./fts-aggregator.yaml
 kubectl create -f ./job-task-indexing.yaml
 kubectl create -f ./sending-mails.yaml
+kubectl create -f ./vp.yaml
 kubectl create -f ./top-users.yaml
 kubectl create -f ./user-reports.yaml
 REM cd ..\..\containers\FTS

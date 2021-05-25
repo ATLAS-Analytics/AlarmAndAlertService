@@ -12,27 +12,21 @@ spec:
       template:
         spec:
           containers:
-          - name: aaas-container
-            image: atlasanalyticsservice/alarmandalertservice:latest
-            command: ["/user-reports.sh"]
-            env:
-            - name: MAILGUN_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: mailgun-secret
-                  key: api-key
-            volumeMounts:
-            - name: google-secret-vol
-              mountPath: "/secrets"
-              readOnly: true
-            - name: config-volume
-              mountPath: "/config"
-              readOnly: true
+            - name: aaas-container
+              image: atlasanalyticsservice/alarmandalertservice:latest
+              command: ["/user-reports.sh"]
+              env:
+                - name: MAILGUN_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: mailgun-secret
+                      key: api-key
+              volumeMounts:
+                - name: config-volume
+                  mountPath: "/config"
+                  readOnly: true
           volumes:
-          - name: google-secret-vol
-            secret:
-              secretName: google-secret
-          - name: config-volume
-            secret:
-              secretName: config
+            - name: config-volume
+              secret:
+                secretName: config
           restartPolicy: Never
