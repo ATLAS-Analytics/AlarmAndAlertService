@@ -1,36 +1,38 @@
-# <h1>This notebook retrieves from ES the info from jobs_archive about 10 top users, and sends alarm if usage is above certain thresholds</h1>
+# This program retrieves from ES the info from jobs_archive about 10 top users,
+# and sends alarm if usage is above certain thresholds
 
-import alerts
-from subscribers import subscribers
-import subprocess
+import sys
 import json
-from elasticsearch import Elasticsearch, exceptions as es_exceptions
-from pandas.io.json import json_normalize
-from pandas import DataFrame
-import pandas as pd
-from datetime import datetime, timedelta
-import datetime
+import requests
+from elasticsearch import Elasticsearch
+from pandas import json_normalize
+from datetime import timedelta
 
-import json
-with open('/config/config.json') as json_data:
+from alerts import alarms
+
+config_path = '/config/config.json'
+# config_path = 'kube/secrets/config.json'
+
+with open(config_path) as json_data:
     config = json.load(json_data,)
 
-# ## Establish Elasticsearch connection
 es = Elasticsearch(
     hosts=[{'host': config['ES_HOST'], 'scheme':'https'}],
     http_auth=(config['ES_USER'], config['ES_PASS']),
     timeout=60)
-# ## Alerts and Alarms
 
+if es.ping():
+    print('connected to ES.')
+else:
+    print('no connection to ES.')
+    sys.exit(1)
 
-S = subscribers()
-A = alerts.alerts()
 
 ind = 'jobs'
 
-# <h2>First Alarm</h2>
-# <h3>get top 10 users/24 hours for walltime*core, and filter out sum walltime > 15 years</h3>
-# <h3>convert walltime in number of cores used per day, by assuming all jobs are single core</h3>
+# First Alarm
+# get top 10 users/24 hours for walltime*core, and filter out sum walltime > 15 years
+# convert walltime in number of cores used per day, by assuming all jobs are single core
 
 s = {
     "size": 0,
@@ -82,10 +84,17 @@ res = es.search(index=ind, body=s)
 agg = res['aggregations']['users']['buckets']
 jsondata = json.dumps(agg)
 
-process = subprocess.Popen(["curl", "-D-", "-H", "Content-Type:application/json", "-X", "POST", "--data", jsondata,
-                            "http://test-jgarcian.web.cern.ch/test-jgarcian/cgi-bin/usersJIRA.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-stdout, stderr = process.communicate()
-# print(agg)
+# print(jsondata)
+
+res = requests.post(
+    'http://test-jgarcian.web.cern.ch/test-jgarcian/cgi-bin/usersJIRA.py',
+    json=jsondata
+)
+if (res.status_code == 200):
+    print('data sent')
+else:
+    print('problem in sending data!')
+    print(res.text, res.status_code)
 
 # create df
 df_w = json_normalize(agg)
@@ -97,31 +106,31 @@ df_w['ncores'] = df_w['walltime_core_sum.value'].apply(
 LIMIT_WALLTIME = 15  # 5 for testing
 df_w = df_w[df_w["walltime_core_sum.value"] > LIMIT_WALLTIME]
 
-df_w.columns = ['jobs', 'user', 'walltime used [years]', 'number of cores']
-print(df_w.to_string())
-
+df_w.columns = ['user', 'jobs', 'walltime', 'cores']
+# print(df_w.to_string())
 
 if df_w.shape[0] > 0:
-    test_name = 'Top Analysis users [Large wall time]'
-    for u in S.get_immediate_subscribers(test_name):
-        body = 'Dear ' + u.name + ',\n\n'
-        body += 'the following users used substantial wall time (more than 15 years/last 24 hours, corresponding to 5475 cores/day):\n\n'
-        body += df_w.to_string() + '\n'
-        body += '\n To get more information about this alert message and its interpretation, please visit:\n'
-        body += 'https://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis-User'
-        body += '\nhttps://its.cern.ch/jira/browse/ADCDPA-1'
-        body += '\n To change your alerts preferences please use the following link:\n' + u.link
-        body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
-        #A.sendMail(test_name, u.email, body)
-        # print(body)
-    #A.addAlert(test_name, u.name, str(df_w.shape[0])+' users with huge walltime.')
+    ALARM = alarms('WFMS', 'User', 'Too much walltime consumed')
+    for index, u in df_w.iterrows():
+
+        src = {
+            "User": u['user'],
+            "walltime": u['walltime'],
+            "cores": u['cores'],
+            "jobs": u['jobs']
+        }
+        print(src)
+        ALARM.addAlarm(
+            body='walltime',
+            tags=[u['user']],
+            source=src
+        )
 else:
     print('No Alarm')
 
 
-# <h2>Second Alarm</h2>
-# <h3>get top 10 users/24 hours for inputfilebytes, and filter out sum input size > 500 TB</h3>
-
+print('============ Second Alarm =================')
+# get top 10 users/24 hours for inputfilebytes, and filter out sum input size > 500 TB
 
 s = {
     "size": 0,  # get one job entry only for debugging purposes
@@ -166,16 +175,21 @@ s = {
 res = es.search(index=ind, body=s)
 # print(res)
 
-
 agg = res['aggregations']['users']['buckets']
 # print(agg)
 
 jsondata = json.dumps(agg)
 
-process = subprocess.Popen(["curl", "-D-", "-H", "Content-Type:application/json", "-X", "POST", "--data", jsondata,
-                            "http://test-jgarcian.web.cern.ch/test-jgarcian/cgi-bin/usersJIRA.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-stdout, stderr = process.communicate()
-print(stdout)
+
+res = requests.post(
+    'http://test-jgarcian.web.cern.ch/test-jgarcian/cgi-bin/usersJIRA.py',
+    json=jsondata
+)
+if (res.status_code == 200):
+    print('data sent', res.text)
+else:
+    print('problem in sending data!')
+    print(res.text, res.status_code)
 
 # create df
 df_i = json_normalize(agg)
@@ -185,33 +199,30 @@ df_i['inputsize_sum.value'] = df_i['inputsize_sum.value'].apply(
 LIMIT_INPUTSIZE = 500  # 5 for testing
 df_i = df_i[df_i["inputsize_sum.value"] > LIMIT_INPUTSIZE]
 
-df_i.columns = ['jobs', 'input size [TB]', 'user']
+df_i.columns = ['user', 'jobs', 'data']
 print(df_i.to_string())
 
 
 if df_i.shape[0] > 0:
-    test_name = 'Top Analysis users [Large input data size]'
-    for u in S.get_immediate_subscribers(test_name):
-        body = 'Dear ' + u.name + ',\n\n'
-        body += 'the following users processed rather substantial input data (>500 TB/last 24 hours):\n\n'
-        body += df_i.to_string() + '\n'
-        body += '\n To get more information about this alert message and its interpretation, please visit:\n'
-        body += 'https://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis-User'
-        body += '\nhttps://its.cern.ch/jira/browse/ADCDPA-1'
-        body += '\n To change your alerts preferences please use the following link:\n' + u.link
-        body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
-        #A.sendMail(test_name, u.email, body)
-        # print(body)
-        #A.addAlert(test_name, u.name, str(df_w.shape[0])+' users with huge walltime.')
+
+    ALARM = alarms('WFMS', 'User', 'Large input data size')
+    for index, u in df_i.iterrows():
+        source = {
+            "User": u['user'],
+            "jobs": u['jobs'],
+            "data": u['data']
+        }
+        ALARM.addAlarm(
+            body='input data',
+            tags=[u['user']],
+            source=source
+        )
 else:
     print('No Alarm')
 
 
-# <h2>Third Alarm</h2>
-# <h3>Notify if user job efficiency drops before 70%</h3>
-
-# In[10]:
-
+print('============ Third Alarm =================')
+# Notify if user job efficiency drops below 70%
 
 s = {
     "size": 0,  # get one job entry only for debugging purposes
@@ -253,7 +264,6 @@ s = {
     }
 }
 
-
 res = es.search(index=ind, body=s)
 # print(res)
 
@@ -285,26 +295,27 @@ if (len(Alarm) > 0):
 
 if (len(Alarm) > 0):
     test_name = 'Top Analysis users [Low efficiency]'
-    for u in S.get_immediate_subscribers(test_name):
-        body = 'Dear ' + u.name + ',\n\n'
-        body += 'the following alarm was raised regarding the global user job efficiency in the last 24 hours:\n\n'
-        body += Alarm + '\n'
-        body += '\n The efficiency is defined as walltime of successful jobs divided by the walltime of successful plus failed jobs'
-        body += '\n The efficiency is calculated on all user jobs in the last 24 hours.'
-        body += '\n To get more information about this alert message and its interpretation, please visit:\n'
-        body += 'https://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis'
-        body += '\nhttps://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis-User'
-        body += '\n To change your alerts preferences please use the following link:\n' + u.link
-        body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
-        A.sendGunMail(test_name, u.email, body)
-        # print(body)
-        A.addAlert(test_name, u.name, Alarm)
+    # for u in S.get_immediate_subscribers(test_name):
+    #     body = 'Dear ' + u.name + ',\n\n'
+    #     body += 'the following alarm was raised regarding the global user job efficiency in the last 24 hours:\n\n'
+    #     body += Alarm + '\n'
+    #     body += '\n The efficiency is defined as walltime of successful jobs divided by the walltime of successful plus failed jobs'
+    #     body += '\n The efficiency is calculated on all user jobs in the last 24 hours.'
+    #     body += '\n To get more information about this alert message and its interpretation, please visit:\n'
+    #     body += 'https://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis'
+    #     body += '\nhttps://atlas-kibana.mwt2.org:5601/app/kibana#/dashboard/FL-Analysis-User'
+    #     body += '\n To change your alerts preferences please use the following link:\n' + u.link
+    #     body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
+    #     A.sendGunMail(test_name, u.email, body)
+    #     # print(body)
+    #     A.addAlert(test_name, u.name, Alarm)
 else:
     print('No Alarm')
 
 
-# <h2>Fourth alarm -- DISABLED --- TO BE REVIEWED</h2>
-# <h3>get name of users with >70 retries in last 24 hours, should we also add a lower limit on the number of jobs?</h3>
+# Fourth alarm -- DISABLED --- TO BE REVIEWED
+# get name of users with >70 retries in last 24 hours,
+# should we also add a lower limit on the number of jobs?
 
 
 s = {

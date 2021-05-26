@@ -1,10 +1,10 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: frontier-failed-q
+  name: vp
   namespace: aaas
 spec:
-  schedule: "8 */3 * * *"
+  schedule: "*/30 * * * *"
   suspend: false
   concurrencyPolicy: Forbid
   jobTemplate:
@@ -14,7 +14,7 @@ spec:
           containers:
             - name: aaas-container
               image: atlasanalyticsservice/alarmandalertservice:latest
-              command: ["/frontier-failed-q.sh"]
+              command: ["/vp.sh"]
               env:
                 - name: MAILGUN_API_KEY
                   valueFrom:
