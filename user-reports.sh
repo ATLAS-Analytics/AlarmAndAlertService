@@ -1,6 +1,5 @@
 #!/bin/bash
 date
-# service sendmail start
 cd Users
 python3.8 user-reports.py
 rc=$?; if [[ $rc != 0 ]]; then 

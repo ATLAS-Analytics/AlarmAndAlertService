@@ -4,7 +4,8 @@ metadata:
   name: sending-mails
   namespace: aaas
 spec:
-  schedule: "3 0,6,12,18  * * *"
+  schedule: "3 * * * *"
+  # schedule: "3 0,6,12,18  * * *"
   # schedule: "3 0,3,6,9,12,15,18,21  * * *"
   suspend: false
   concurrencyPolicy: Forbid
