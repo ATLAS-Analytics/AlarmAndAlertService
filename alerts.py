@@ -190,7 +190,7 @@ if __name__ == '__main__':
             except ValueError:
                 print('missing:', s['category'], s['subcategory'], s['event'])
                 continue
-            als = a.getAlarms(6)
+            als = a.getAlarms(mi)
             for al in als:
                 if 'tags' in s and 'tags' in al and s['tags'] != '*':
                     tagList = s['tags'].split(' ')
