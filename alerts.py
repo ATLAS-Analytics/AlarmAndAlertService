@@ -1,5 +1,6 @@
 import os
 import time
+import datetime as dt
 import requests
 import json
 
@@ -159,11 +160,31 @@ def getUsers():
 if __name__ == '__main__':
     getCategories()
     users = getUsers()
+    currentHour = dt.datetime.now().hour
+    print('current hour:', currentHour)
     for u in users:
-        if u.preferences['vacation']:
+
+        print(u.user, u.preferences)
+
+        # setting defaults if not there
+        if 'vacation' not in u.preferences:
+            u.preferences['vacation'] = False
+        if 'mail_interval' not in u.preferences:
+            u.preferences['mail_interval'] = 21600
+
+        if u.preferences['vacation']:  # skip in on vacation
+            continue
+
+        # skip if not appropriate hour.
+        mi = int(u.preferences['mail_interval'] / 3600)
+        if mi == 0:
+            mi = 1
+        if currentHour % mi:
+            print('not yet...')
             continue
 
         for s in u.subscriptions:
+            print(s)
             try:
                 a = alarms(s['category'], s['subcategory'], s['event'])
             except ValueError:
@@ -171,7 +192,17 @@ if __name__ == '__main__':
                 continue
             als = a.getAlarms(6)
             for al in als:
+                if 'tags' in s and 'tags' in al and s['tags'] != '*':
+                    tagList = s['tags'].split(' ')
+                    found = False
+                    for tl in tagList:
+                        if tl in al['tags']:
+                            found = True
+                    if not found:
+                        print('tag not matched:', al['tags'])
+                        continue
+                    print('tag matched.')
                 alert_text = a.getText(al)
                 u.addAlert(alert_text)
-
         u.sendMail()
+        print('-------------------------------------------------------------')
