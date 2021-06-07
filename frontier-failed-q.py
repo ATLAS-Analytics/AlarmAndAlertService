@@ -184,6 +184,7 @@ for key in taskinfo:
 print('problematic tasks:', taskid)
 
 frontiersrvr = {}
+frsrvs = []
 for r in res:
     ub = r['unserved']['buckets']
     rej = ub['rejected']['doc_count']
@@ -199,12 +200,13 @@ for r in res:
         continue
     mes = ''
     if rej > 0:
-        mes += str(rej) + " rejected\t"
+        mes += str(rej) + " rejected "
     if dis > 0:
-        mes += str(dis) + " disconnected\t"
+        mes += str(dis) + " disconnected "
     if pre > 0:
         mes += str(pre) + " unprocessed "
     frontiersrvr[r['key']] = mes + 'queries.'
+    frsrvs.append(r['key'])
 
 print('problematic servers:', frontiersrvr)
 
@@ -219,7 +221,7 @@ if len(frontiersrvr) > 0 or len(taskid) > 0:
     ALARM = alarms('Analytics', 'Frontier', 'Failed queries')
     ALARM.addAlarm(
         body='Failed Frontier queries',
-        tags=frontiersrvr,
+        tags=frsrvs,
         source={'servers': frontiersrvr, 'tasks': taskid}
     )
 
