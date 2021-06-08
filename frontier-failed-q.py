@@ -222,7 +222,7 @@ if len(frontiersrvr) > 0 or len(taskid) > 0:
     ALARM.addAlarm(
         body='Failed Frontier queries',
         tags=frsrvs,
-        source={'servers': frontiersrvr, 'tasks': taskid}
+        source={'servers': frontiersrvr, 'tasks': list(taskid)}
     )
 
     #   body += '\tthis mail is to let you know that in the past ' + \
