@@ -170,13 +170,13 @@ if __name__ == '__main__':
         if 'vacation' not in u.preferences:
             u.preferences['vacation'] = False
         if 'mail_interval' not in u.preferences:
-            u.preferences['mail_interval'] = 21600
+            u.preferences['mail_interval'] = 6
 
         if u.preferences['vacation']:  # skip in on vacation
             continue
 
         # skip if not appropriate hour.
-        mi = int(u.preferences['mail_interval'] / 3600)
+        mi = int(u.preferences['mail_interval'])
         if mi == 0:
             mi = 1
         if currentHour % mi:
