@@ -14,6 +14,7 @@ spec:
           containers:
             - name: aaas-container
               image: atlasanalyticsservice/alarmandalertservice:latest
+              imagePullPolicy: IfNotPresent
               command: ["/fts-aggregator.sh"]
               volumeMounts:
                 - name: config-volume

@@ -16,6 +16,7 @@ spec:
           containers:
             - name: aaas-container
               image: atlasanalyticsservice/alarmandalertservice:latest
+              imagePullPolicy: IfNotPresent
               command: ["/sending-mails.sh"]
               env:
                 - name: MAILGUN_API_KEY
