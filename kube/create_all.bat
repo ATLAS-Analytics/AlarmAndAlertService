@@ -13,6 +13,8 @@ kubectl create -f ./frontier-threads.yaml
 kubectl create -f ./job-task-indexing.yaml
 kubectl create -f ./sending-mails.yaml
 kubectl create -f ./vp.yaml
+kubectl create -f ./xcache.yaml
+kubectl create -f ./squid.yaml
 kubectl create -f ./top-users.yaml
 kubectl create -f ./user-reports.yaml
 REM cd ..\..\containers\FTS
