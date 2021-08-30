@@ -48,7 +48,7 @@ for site, details in failovers.items():
         continue
     source = {
         "site": site,
-        "servers": details['servers'],
+        "WNs": details['servers'],
         "requests": details['requests'],
         "data": details['data']
     }
