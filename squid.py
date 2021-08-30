@@ -33,8 +33,8 @@ if (res.status_code == 200):
         site = vals[2]
         if site in sites:
             failovers[site]['servers'] += 1
-            failovers[site]['requests'] += vals[7]
-            failovers[site]['data'] += vals[5]
+            failovers[site]['requests'] += int(vals[7])
+            failovers[site]['data'] += int(vals[5])
 
     print('failovers:', failovers)
 else:
