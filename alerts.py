@@ -85,6 +85,8 @@ class alarms:
             for v in vars:
                 if '%{'+v+'}' in temp:
                     temp = temp.replace('%{'+v+'}', str(vars[v]))
+                if 'c{'+v+'}' in temp:
+                    temp = temp.replace('c{'+v+'}', str(len(vars[v])))
                 if 'p{'+v+'}' in temp:
                     temp = temp.replace('p{'+v+'}', str(round(vars[v]*100, 3))+'%')
             res += temp
