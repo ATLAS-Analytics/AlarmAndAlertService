@@ -126,7 +126,7 @@ class user:
         self.addHeaderFooter()
         print(self.mail)
         requests.post(
-            "https://api.mailgun.net/v3/analytics.mwt2.org/messages",
+            "https://api.mailgun.net/v3/mg.analytics.mwt2.org/messages",
             auth=("api", mailgun_api_key),
             data={
                 "from": "ATLAS Alarm & Alert System <aaas@analytics.mwt2.org>",

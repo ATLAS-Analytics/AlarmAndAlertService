@@ -77,25 +77,24 @@ my_query = {
                         }
                     }
                 }
-            ],
-            "must_not": []
+            ]
         }
     }
 }
 
 res = es.search(index=ind, body=my_query)
-print('total results:', res['hits']['total']['value'])
-
+results = res['hits']['total']['value']
+print('total results:', results)
 
 tkid = []
 user = []
 tkids = {}
 users = {}
-for i in range(res['hits']['total']['value']):
+for i in range(results):
     tkid.append(res['hits']['hits'][i]['_source']['taskid'])
     user.append(res['hits']['hits'][i]['_source']['dn'])
 
-for i in range(res['hits']['total']['value']):
+for i in range(results):
     if len(tkid) > 0:
         count = tkid.count(tkid[i])
         value = tkid[i]
@@ -103,7 +102,7 @@ for i in range(res['hits']['total']['value']):
             tkid.remove(value)
         tkids[value] = count
 
-for i in range(res['hits']['total']['value']):
+for i in range(results):
     if len(user) > 0:
         count = user.count(user[i])
         value = user[i]
