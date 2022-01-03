@@ -34,13 +34,17 @@ for server in data:
     timestamp = server['datapoints'][-1][1]
     timestamp = datetime.fromtimestamp(timestamp)
     timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+    if not connections:
+        print('n connections not retrieved... skipping.')
+        continue
     if connections < 200:
         print('server {} has {} connections.'.format(serverIP, connections))
     else:
         source = {
             "xcache": serverIP,
             "n_connections": connections,
-            "timestamp": timestamp}
+            "timestamp": timestamp
+        }
         print(source)
         ALARM.addAlarm(
             body='too many connections.',
