@@ -17,7 +17,7 @@ with open(config_path) as json_data:
 print('current time', datetime.now())
 current_hour = datetime.now().hour
 
-sites = ['MWT2', 'AGLT2', 'SWT2_CPB', 'BU_ATLAS_Tier2']
+sites = ['MWT2', 'AGLT2', 'SWT2_CPB', 'BU_ATLAS_Tier2', 'UTA_SWT2', 'OU_OCHEP_SWT2']
 failovers = {a: {'servers': 0, 'requests': 0, 'data': 0} for a in sites}
 
 res = requests.get(
