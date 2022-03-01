@@ -6,7 +6,7 @@ import json
 
 config_path = '/config/config.json'
 # config_path = 'kube/secrets/config.json'
-mailgun_api_key = os.environ['MAILGUN_API_KEY']
+mailgun_api_key = None
 
 with open(config_path) as json_data:
     config = json.load(json_data,)
@@ -162,6 +162,7 @@ def getUsers():
 
 
 if __name__ == '__main__':
+    mailgun_api_key = os.environ['MAILGUN_API_KEY']
     getCategories()
     users = getUsers()
     currentHour = dt.datetime.now().hour
