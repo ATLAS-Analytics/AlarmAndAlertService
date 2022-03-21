@@ -56,15 +56,13 @@ For all ATLAS alarm &amp; alert codes.
                     "Title": 'Current vs Referent time',
                     "Description": "This plot shows number of documents indexed in two intervals. The Current interval is 1h long except for meta data (24h). Referent interval is just before current interval but is twice longer.",
                     "Filename": "Images/Check_perfsonar_indexing.png",
-                    "Link": "https://atlas-kibana.mwt2.org/s/networking/app/kibana#/visualize/edit/58bf3e80-18d1-11e8-8f2f-ab6704660c79?_g=(refreshInterval%3A(pause%3A!t%2Cvalue%3A0)%2Ctime%3A(from%3Anow-7d%2Cmode%3Aquick%2Cto%3Anow))"
+                    "Link": "<https://atlas-kibana.mwt2.org/s/networking/app/kibana#/visualize/edit/58bf3e80-18d1-11e8-8f2f-ab6704660c79?_g=(refreshInterval%3A(pause%3A!t%2Cvalue%3A0)%2Ctime%3A(from%3Anow-7d%2Cmode%3Aquick%2Cto%3Anow>))"
                 }
             ]
         )
 
         print(user.to_string())
         A.addAlert(test_name, user.name, 'just an issue.')
-
-
 
     subscribersToRed = S.get_immediate_subscribers(testName)
     for subscriber in subscribersToRed:
@@ -75,7 +73,6 @@ For all ATLAS alarm &amp; alert codes.
         print(subscriber.to_string())
         A.sendGunMail(testName, subscriber.email, body)
 
-    
     subscribersToYellow = S.get_immediate_subscribers(testName)
     msg = str(res['unassigned_shards']) + ' unassigned shards on ' + \
         str(res['number_of_nodes']) + ' nodes.'
@@ -89,3 +86,5 @@ For all ATLAS alarm &amp; alert codes.
         body = body + '\n\n To change your alerts preferences please you the following link:\n' + subscriber.link
         print(subscriber.to_string())
         A.sendGunMail(testName, subscriber.email, body)
+
+trigger.
