@@ -61,7 +61,7 @@ print('current time', curtime)
 es = Elasticsearch(
     hosts=[{'host': config['ES_HOST'], 'scheme':'https'}],
     http_auth=(config['ES_USER'], config['ES_PASS']),
-    timeout=60)
+    request_timeout=60)
 
 if es.ping():
     print('connected to ES.')

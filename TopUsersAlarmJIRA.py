@@ -48,16 +48,14 @@ def time_filter(indices, last_days=1, pattern=''):
     return filtered
 
 
-# %%
-
 with open('/config/config.json') as json_data:
     config = json.load(json_data,)
 
 # ## Establish Elasticsearch connection
 es = Elasticsearch(
-    hosts=[{'host': config['ES_HOST'], 'scheme':'https'}],
+    hosts=[{'host': config['ES_HOST'], 'port':9200, 'scheme':'https'}],
     http_auth=(config['ES_USER'], config['ES_PASS']),
-    timeout=60)
+    request_timeout=60)
 
 # get job archive indices from ES
 indices = es.cat.indices(index="jobs_archive_*",
