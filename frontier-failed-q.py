@@ -59,7 +59,7 @@ print('current time', curtime)
 # Send a query to the ES-DB for documents containing information of failed queries
 
 es = Elasticsearch(
-    hosts=[{'host': config['ES_HOST'], 'scheme':'https'}],
+    hosts=[{'host': config['ES_HOST'], 'port':9200, 'scheme':'https'}],
     http_auth=(config['ES_USER'], config['ES_PASS']),
     request_timeout=60)
 
