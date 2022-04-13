@@ -39,13 +39,11 @@ print('current time', datetime.now())
 
 # JOBS
 
-jobs_query = {
-    "query": {
-        "range": {"modificationtime": {"gte": startTime, "lte": currentTime}}
-    }
+query = {
+    "range": {"modificationtime": {"gte": startTime, "lte": currentTime}}
 }
 
-res = es.count(index='jobs', body=jobs_query)
+res = es.count(index='jobs', query=query)
 print(res)
 if res['count'] == 0:
     ALARM.addAlarm(body='Issue in indexing jobs.', tags=['jobs'])
@@ -53,13 +51,11 @@ if res['count'] == 0:
 
 # TASKS
 
-tasks_query = {
-    "query": {
-        "range": {"modificationtime": {"gte": startTime, "lte": currentTime}}
-    }
+query = {
+    "range": {"modificationtime": {"gte": startTime, "lte": currentTime}}
 }
 
-res = es.count(index='tasks', body=tasks_query)
+res = es.count(index='tasks', query=query)
 print(res)
 if res['count'] == 0:
     ALARM.addAlarm(body='Issue in indexing tasks.', tags=['tasks'])
@@ -67,13 +63,11 @@ if res['count'] == 0:
 
 # TASK PARAMETERS
 
-task_params_query = {
-    "query": {
-        "range": {"creationdate": {"gte": startTime, "lte": currentTime}}
-    }
+query = {
+    "range": {"creationdate": {"gte": startTime, "lte": currentTime}}
 }
 
-res = es.count(index='task_parameters', body=task_params_query)
+res = es.count(index='task_parameters', query=query)
 print(res)
 if res['count'] == 0:
     ALARM.addAlarm(body='Issue in indexing task parameters.',
