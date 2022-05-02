@@ -3,7 +3,8 @@
 # ====
 # It is run every hour from a cron job.
 
-from datetime import datetime
+from time
+from datetime import datetime,timezone
 import json
 import requests
 
@@ -14,8 +15,7 @@ config_path = '/config/config.json'
 with open(config_path) as json_data:
     config = json.load(json_data,)
 
-print('current time', datetime.now())
-current_hour = datetime.now().hour
+print('current time', datetime.now(timezone.utc))
 
 sites = ['MWT2', 'AGLT2', 'SWT2_CPB', 'BU_ATLAS_Tier2', 'UTA_SWT2', 'OU_OCHEP_SWT2']
 failovers = {a: {'servers': 0, 'requests': 0, 'data': 0} for a in sites}
@@ -28,7 +28,7 @@ if (res.status_code == 200):
     # ['Timestamp', 'Group', 'Sites', 'Host', 'Ip', 'Bandwidth', 'BandwidthRate', 'Hits', 'HitsRate']
     for line in lines[1:]:
         vals = line.split('\t')
-        if datetime.fromtimestamp(int(vals[0])).hour != current_hour:
+        if int(vals[0])+3600 < time.time():
             continue
         site = vals[2]
         if site in sites:
