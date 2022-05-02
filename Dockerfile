@@ -1,6 +1,7 @@
 FROM ivukotic/ml_platform:latest
 
 LABEL maintainer Ilija Vukotic <ivukotic@cern.ch>
+ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=DontWarn
 RUN apt-key adv --keyserver developer.download.nvidia.com --recv-keys A4B469963BF863CC
 RUN apt-get update && apt-get install sendmail -y
 
