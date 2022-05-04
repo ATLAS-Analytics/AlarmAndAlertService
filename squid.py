@@ -3,8 +3,8 @@
 # ====
 # It is run every hour from a cron job.
 
-from time
-from datetime import datetime,timezone
+import time
+from datetime import datetime, timezone
 import json
 import requests
 
@@ -17,7 +17,8 @@ with open(config_path) as json_data:
 
 print('current time', datetime.now(timezone.utc))
 
-sites = ['MWT2', 'AGLT2', 'SWT2_CPB', 'BU_ATLAS_Tier2', 'UTA_SWT2', 'OU_OCHEP_SWT2','SWT2_CPB,UTA_SWT2']
+sites = ['MWT2', 'AGLT2', 'SWT2_CPB', 'BU_ATLAS_Tier2',
+         'UTA_SWT2', 'OU_OCHEP_SWT2', 'SWT2_CPB,UTA_SWT2']
 failovers = {a: {'servers': 0, 'requests': 0, 'data': 0} for a in sites}
 
 res = requests.get(
