@@ -3,6 +3,9 @@
 # retries and classifies them
 # ====
 
+
+#  needs a valid proxy.
+
 import sys
 import datetime
 import time
@@ -12,6 +15,8 @@ import json
 
 from multiprocessing import Process, Queue
 
+from XRootD import client
+from XRootD.client.flags import OpenFlags
 
 q = Queue()
 
@@ -23,6 +28,12 @@ def tester(i, q):
             time.sleep(10)
             continue
         print(f'thr:{i}, checking {doc["url"]}')
+        try:
+            myclient = client.FileSystem(doc['url'])
+            status, locations = myclient.locate("/tmp", OpenFlags.REFRESH)
+            print(status, locations)
+        except Exception as e:
+            print('issue opening file.', e)
 
 
 for i in range(3):

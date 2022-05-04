@@ -3,7 +3,11 @@ FROM python:latest
 
 LABEL maintainer Ilija Vukotic <ivukotic@cern.ch>
 
-RUN apt-get update && apt-get install vim sendmail -y
+RUN apt-get update && \\
+    apt-get install -y \\
+    vim \\
+    sendmail \\
+    cmake 
 
 COPY . .
 RUN python3 -m pip install -r requirements.txt
