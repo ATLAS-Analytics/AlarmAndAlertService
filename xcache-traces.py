@@ -16,9 +16,19 @@ import json
 from multiprocessing import Process, Queue
 
 from XRootD import client
-from XRootD.client.flags import OpenFlags
 
 q = Queue()
+
+
+def splitURL(url):
+    originStart = url.index('root:', 5)
+    cache = url[:originStart-2]
+    op = url[originStart:]
+
+    pathStart = op.index('1094/', 8)+4
+    origin = op[:pathStart]
+    opath = op[pathStart:]
+    return cache, origin, opath
 
 
 def tester(i, q):
@@ -27,11 +37,12 @@ def tester(i, q):
         if not doc:
             time.sleep(10)
             continue
-        print(f'thr:{i}, checking {doc["url"]}')
+        c, o, p = splitURL(doc['url'])
+        print(f'thr:{i}, checking cache {c} origin {o} for {p}')
         try:
-            myclient = client.FileSystem(doc['url'])
-            status, locations = myclient.locate("/tmp", OpenFlags.REFRESH)
-            print(status, locations)
+            myclient = client.FileSystem(o)
+            status, statInfo = myclient.stat(p, timeout=10)
+            print(status, statInfo)
         except Exception as e:
             print('issue opening file.', e)
 
