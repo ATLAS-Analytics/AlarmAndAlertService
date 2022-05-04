@@ -3,10 +3,9 @@ FROM python:latest
 
 LABEL maintainer Ilija Vukotic <ivukotic@cern.ch>
 
-RUN apt-get update && \\
-    apt-get install -y \\
-    vim \\
-    sendmail \\
+RUN apt-get update && apt-get install -y \
+    vim \
+    sendmail \
     cmake 
 
 COPY . .
