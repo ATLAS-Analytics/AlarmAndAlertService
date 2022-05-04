@@ -1,4 +1,4 @@
-elasticsearch==7.16.1
+elasticsearch==7.17.3
 numpy
 pandas
 requests
