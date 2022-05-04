@@ -1,0 +1,4 @@
+elasticsearch==7.16.1
+numpy
+pandas
+requests

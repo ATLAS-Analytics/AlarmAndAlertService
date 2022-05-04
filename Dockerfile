@@ -1,10 +1,13 @@
-FROM ivukotic/ml_platform:latest
+# FROM ivukotic/ml_platform:latest
+FROM python:latest
 
 LABEL maintainer Ilija Vukotic <ivukotic@cern.ch>
 
-RUN apt-get update && apt-get install sendmail -y
+RUN apt-get update && apt-get install vim sendmail -y
 
 COPY . .
+RUN python3 -m pip install -r requirements.txt
+
 RUN mkdir Images
 RUN mkdir Users/Images
 # build info
