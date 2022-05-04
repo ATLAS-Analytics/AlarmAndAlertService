@@ -5,6 +5,7 @@
 
 import sys
 import datetime
+import time
 from alerts import alarms
 from elasticsearch import Elasticsearch
 import json
@@ -16,8 +17,12 @@ q = Queue()
 
 
 def tester(i, q):
-    url = q.get()
-    print(f'I am Tester {i}, checking {url}')
+    while True:
+        doc = q.get()
+        if not doc:
+            time.sleep(10)
+            continue
+        print(f'thr:{i}, checking {doc["url"]}')
 
 
 for i in range(3):
@@ -42,8 +47,6 @@ else:
 nhours = 3
 
 ct = datetime.datetime.utcnow()
-ind = 'rucio-traces'
-print(ind)
 curtime = ct.strftime('%Y%m%dT%H%M%S.%f')[:-3] + 'Z'
 
 td = datetime.timedelta(hours=nhours)
@@ -54,43 +57,41 @@ print('start time', starttime)
 print('current time', curtime)
 
 my_query = {
-    "size": 10000,
-    "query": {
-        "bool": {
-            "must": [
-                {
-                    "wildcard": {"url": {"value": "root*//root*"}}
-                },
-                {
-                    "term": {"clientState": "FAILED_REMOTE_OPEN"}
-                },
-                {
-                    "range": {
-                        "@timestamp": {
-                            "gte": starttime,
-                            "lte": curtime,
-                            "format": "basic_date_time"
-                        }
+    "bool": {
+        "must": [
+            {
+                "wildcard": {"url": {"value": "root*//root*"}}
+            },
+            {
+                "term": {"clientState": "FAILED_REMOTE_OPEN"}
+            },
+            {
+                "range": {
+                    "@timestamp": {
+                        "gte": starttime,
+                        "lte": curtime,
+                        "format": "basic_date_time"
                     }
                 }
-            ]
-        }
+            }
+        ]
     }
 }
 
-res = es.search(index=ind, body=my_query)
+res = es.search(index='rucio_traces', query=my_query, size=10000)
 results = res['hits']['total']['value']
 print('total results:', results)
 
-# tkid = []
-# user = []
-# tkids = {}
-# users = {}
-# for i in range(results):
-#     tkid.append(res['hits']['hits'][i]['_source']['taskid'])
-#     user.append(res['hits']['hits'][i]['_source']['dn'])
+keep = [
+    'stateReason', 'scope', 'filename', 'eventType', 'localSite',
+    'dataset', 'filesize', 'timeStart', 'hostname', 'taskid', 'url', 'remoteSite', 'pq'
+]
 
-# q.put('a')
+for i in range(results):
+    doc = res['hits']['hits'][i]['_source']
+    ndoc = {k: doc[k] for k in keep}
+    # print(ndoc)
+    q.put(ndoc)
 
 
 # if len(tkids) > 0:
