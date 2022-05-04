@@ -7,8 +7,23 @@ import sys
 import datetime
 from alerts import alarms
 from elasticsearch import Elasticsearch
-
 import json
+
+from multiprocessing import Process, Queue
+
+
+q = Queue()
+
+
+def tester(i, q):
+    url = q.get()
+    print(f'I am Tester {i}, checking {url}')
+
+
+for i in range(3):
+    Process(target=tester, args=(i, q,)).start()
+
+
 with open('/config/config.json') as json_data:
     config = json.load(json_data,)
 
@@ -75,21 +90,8 @@ print('total results:', results)
 #     tkid.append(res['hits']['hits'][i]['_source']['taskid'])
 #     user.append(res['hits']['hits'][i]['_source']['dn'])
 
-# for i in range(results):
-#     if len(tkid) > 0:
-#         count = tkid.count(tkid[i])
-#         value = tkid[i]
-#         for j in range(count):
-#             tkid.remove(value)
-#         tkids[value] = count
+# q.put('a')
 
-# for i in range(results):
-#     if len(user) > 0:
-#         count = user.count(user[i])
-#         value = user[i]
-#         for j in range(count):
-#             user.remove(value)
-#         users[value] = count
 
 # if len(tkids) > 0:
 #     ALARM = alarms('Analytics', 'Frontier', 'Bad SQL queries')
