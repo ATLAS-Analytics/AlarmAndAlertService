@@ -9,7 +9,7 @@
 import sys
 import datetime
 import time
-from alerts import alarms
+# from alerts import alarms
 from elasticsearch import Elasticsearch
 import json
 
