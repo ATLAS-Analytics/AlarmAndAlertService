@@ -68,7 +68,7 @@ def tester(i, q):
 
 
 def store():
-    print("storing results in ES.")
+    print("getting results.")
     allDocs = []
     while True:
         doc = q.get()
@@ -76,6 +76,7 @@ def store():
             break
         allDocs.append(doc)
     try:
+        print('storing results in ES.')
         res = helpers.bulk(es, allDocs,
                            raise_on_exception=True, request_timeout=60)
         print("inserted:", res[0], '\tErrors:', res[1])

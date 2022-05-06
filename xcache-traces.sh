@@ -5,6 +5,7 @@ date
 
 # check for proxy and export it.
 export X509_USER_PROXY=/etc/proxy/x509up
+export X509_CERT_DIR=/etc/grid-security/certificates
 
 while [ ! -f $X509_USER_PROXY ]
 do
