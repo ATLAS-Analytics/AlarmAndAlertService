@@ -14,6 +14,7 @@ do
 done
 
 ls -lh $X509_USER_PROXY
+ls -lh $X509_CERT_DIR
 
 python3 xcache-traces.py
 rc=$?; if [[ $rc != 0 ]]; then 
