@@ -71,7 +71,7 @@ def store():
     print("getting results.")
     allDocs = []
     while True:
-        doc = q.get()
+        doc = r.get()
         if not doc:
             break
         allDocs.append(doc)
