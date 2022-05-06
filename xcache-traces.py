@@ -3,11 +3,6 @@
 # retries and classifies them
 # ====
 
-
-# needs a valid proxy.
-# write status back to Elasticsearch
-# TLS error: Unable to use CA cert directory /etc/grid-security/certificates; does not exist.
-
 import sys
 import datetime
 import time
@@ -22,8 +17,6 @@ from XRootD import client
 
 nhours = 1
 nproc = 3
-q = Queue()
-r = Queue()
 procs = []
 
 
@@ -38,17 +31,15 @@ def splitURL(url):
     return cache, origin, opath
 
 
-def tester(i, q):
-    while True:
+def stater(i, q, r):
+    while not q.empty():
         doc = q.get()
-        if doc == "stop":
-            print(f'Thread {i}, Stopping.')
-            break
         c, o, p = splitURL(doc['url'])
         print(f'thr:{i}, checking cache {c} origin {o} for {p}')
+        myclient = client.FileSystem(o)
         try:
             myclient = client.FileSystem(o)
-            status, statInfo = myclient.stat(p, timeout=10)
+            status, statInfo = myclient.stat(p, timeout=5)
             print(status)  # , statInfo)
             doc['ok'] = status.ok
             doc['error'] = status.error
@@ -58,13 +49,44 @@ def tester(i, q):
             doc['code'] = status.code
             doc['_index'] = "remote_io_retries"
             doc['timestamp'] = int(time.time()*1000)
-            r.put(doc)
-
         except Exception as e:
-            print('issue opening file.', e)
+            print('issue stating file.', e)
+
+        if not status.ok:
+            r.put(doc, block=True, timeout=0.1)
+            continue
+
+        try:
+            with client.File() as f:
+                print("opening:", o+p)
+                ostatus, nothing = f.open(o+p, timeout=5)
+                print('open: ', ostatus)
+                doc['open_ok'] = ostatus.ok
+                doc['open_error'] = ostatus.error
+                doc['open_fatal'] = ostatus.fatal
+                doc['open_message'] = ostatus.message
+                doc['open_status'] = ostatus.status
+                doc['open_code'] = ostatus.code
+                if ostatus.ok:
+                    rstatus, data = f.read(offset=0, size=1024, timeout=10)
+                    print("reading", rstatus)
+                    doc['read_ok'] = rstatus.ok
+                    doc['read_error'] = rstatus.error
+                    doc['read_fatal'] = rstatus.fatal
+                    doc['read_message'] = rstatus.message
+                    doc['read_status'] = rstatus.status
+                    doc['read_code'] = rstatus.code
+                    # f.close(timeout=10) # not needed
+        except Exception as e:
+            print('issue reading file.', e)
+
+        r.put(doc, block=True, timeout=0.1)
+
+    print('Thread done.')
+    print("===>", q.qsize())
 
 
-def store():
+def store(r):
     print("getting results.")
     allDocs = []
     while not r.empty():
@@ -87,82 +109,81 @@ def store():
         print('Something seriously wrong happened.', e)
 
 
-with open('/config/config.json') as json_data:
-    config = json.load(json_data,)
+if __name__ == "__main__":
 
-es = Elasticsearch(
-    hosts=[{'host': config['ES_HOST'], 'port':9200, 'scheme':'https'}],
-    http_auth=(config['ES_USER'], config['ES_PASS']),
-    request_timeout=60)
+    with open('/config/config.json') as json_data:
+        config = json.load(json_data,)
 
-if es.ping():
-    print('connected to ES.')
-else:
-    print('no connection to ES.')
-    sys.exit(1)
+    es = Elasticsearch(
+        hosts=[{'host': config['ES_HOST'], 'port':9200, 'scheme':'https'}],
+        http_auth=(config['ES_USER'], config['ES_PASS']),
+        request_timeout=60)
 
+    if es.ping():
+        print('connected to ES.')
+    else:
+        print('no connection to ES.')
+        sys.exit(1)
 
-ct = datetime.datetime.utcnow()
-curtime = ct.strftime('%Y%m%dT%H%M%S.%f')[:-3] + 'Z'
+    ct = datetime.datetime.utcnow()
+    curtime = ct.strftime('%Y%m%dT%H%M%S.%f')[:-3] + 'Z'
 
-td = datetime.timedelta(hours=nhours)
-st = ct - td
-starttime = st.strftime('%Y%m%dT%H%M%S.%f')[:-3] + 'Z'
+    td = datetime.timedelta(hours=nhours)
+    st = ct - td
+    starttime = st.strftime('%Y%m%dT%H%M%S.%f')[:-3] + 'Z'
 
-print('start time', starttime)
-print('current time', curtime)
+    print('start time', starttime)
+    print('current time', curtime)
 
-my_query = {
-    "bool": {
-        "must": [
-            {
-                "wildcard": {"url": {"value": "root*//root*"}}
-            },
-            {
-                "term": {"clientState": "FAILED_REMOTE_OPEN"}
-            },
-            {
-                "range": {
-                    "@timestamp": {
-                        "gte": starttime,
-                        "lte": curtime,
-                        "format": "basic_date_time"
+    my_query = {
+        "bool": {
+            "must": [
+                {
+                    "wildcard": {"url": {"value": "root*//root*"}}
+                },
+                {
+                    "term": {"clientState": "FAILED_REMOTE_OPEN"}
+                },
+                {
+                    "range": {
+                        "@timestamp": {
+                            "gte": starttime,
+                            "lte": curtime,
+                            "format": "basic_date_time"
+                        }
                     }
                 }
-            }
-        ]
+            ]
+        }
     }
-}
 
-res = es.search(index='rucio_traces', query=my_query, size=10000)
-results = res['hits']['total']['value']
-print('total results:', results)
+    res = es.search(index='rucio_traces', query=my_query, size=10000)
+    results = res['hits']['total']['value']
+    print('total results:', results)
 
-keep = [
-    'stateReason', 'scope', 'filename', 'eventType', 'localSite',
-    'dataset', 'filesize', 'timeStart', 'hostname', 'taskid', 'url', 'remoteSite', 'pq'
-]
+    keep = [
+        'stateReason', 'scope', 'filename', 'eventType', 'localSite',
+        'dataset', 'filesize', 'timeStart', 'hostname', 'taskid', 'url', 'remoteSite', 'pq'
+    ]
 
-for i in range(results):
-    doc = res['hits']['hits'][i]['_source']
-    ndoc = {k: doc[k] for k in keep}
-    # print(ndoc)
-    q.put(ndoc)
+    q = Queue()
+    for i in range(results):
+        doc = res['hits']['hits'][i]['_source']
+        ndoc = {k: doc[k] for k in keep}
+        # print(ndoc)
+        q.put(ndoc)
 
-for i in range(nproc):
-    q.put("stop")
+    r = Queue()
+    for i in range(nproc):
+        p = Process(target=stater, args=(i, q, r))
+        p.start()
+        procs.append(p)
 
-for i in range(nproc):
-    p = Process(target=tester, args=(i, q))
-    p.start()
-    procs.append(p)
+    for i in range(nproc):
+        procs[i].join()
 
-
-for i in range(nproc):
-    procs[i].join()
-
-print("Done testing.")
-store()
+    print("Done testing.")
+    store(r)
 
 # if len(tkids) > 0:
 #     ALARM = alarms('Analytics', 'Frontier', 'Bad SQL queries')
