@@ -44,9 +44,6 @@ def tester(i, q):
         if doc == "stop":
             print(f'Thread {i}, Stopping.')
             break
-        if not doc:
-            time.sleep(10)
-            continue
         c, o, p = splitURL(doc['url'])
         print(f'thr:{i}, checking cache {c} origin {o} for {p}')
         try:
@@ -59,8 +56,8 @@ def tester(i, q):
             doc['message'] = status.message
             doc['status'] = status.status
             doc['code'] = status.code
-            doc['_index'] = "xcache_retries",
-            doc['timestamp'] = time.time()
+            doc['_index'] = "remote_io_retries"
+            doc['timestamp'] = int(time.time()*1000)
             r.put(doc)
 
         except Exception as e:
@@ -70,10 +67,8 @@ def tester(i, q):
 def store():
     print("getting results.")
     allDocs = []
-    while True:
+    while not r.empty():
         doc = r.get()
-        if not doc:
-            break
         allDocs.append(doc)
     try:
         print('storing results in ES.')
@@ -90,12 +85,6 @@ def store():
             print(i)
     except Exception as e:
         print('Something seriously wrong happened.', e)
-
-
-for i in range(nproc):
-    p = Process(target=tester, args=(i, q,))
-    procs.append(p)
-    p.start()
 
 
 with open('/config/config.json') as json_data:
@@ -164,8 +153,15 @@ for i in range(nproc):
     q.put("stop")
 
 for i in range(nproc):
+    p = Process(target=tester, args=(i, q))
+    p.start()
+    procs.append(p)
+
+
+for i in range(nproc):
     procs[i].join()
 
+print("Done testing.")
 store()
 
 # if len(tkids) > 0:
