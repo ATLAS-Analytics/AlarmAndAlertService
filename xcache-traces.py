@@ -31,6 +31,15 @@ def splitURL(url):
     return cache, origin, opath
 
 
+def addStatus(doc, step, status):
+    doc[step+'ok'] = status.ok
+    doc[step+'error'] = status.error
+    doc[step+'fatal'] = status.fatal
+    doc[step+'message'] = status.message
+    doc[step+'status'] = status.status
+    doc[step+'code'] = status.code
+
+
 def stater(i, q, r):
     while not q.empty():
         doc = q.get()
@@ -40,13 +49,8 @@ def stater(i, q, r):
         try:
             myclient = client.FileSystem(o)
             status, statInfo = myclient.stat(p, timeout=5)
-            print(status)  # , statInfo)
-            doc['ok'] = status.ok
-            doc['error'] = status.error
-            doc['fatal'] = status.fatal
-            doc['message'] = status.message
-            doc['status'] = status.status
-            doc['code'] = status.code
+            print("stat:", status)  # , statInfo)
+            addStatus(doc, '', status)
             doc['_index'] = "remote_io_retries"
             doc['timestamp'] = int(time.time()*1000)
         except Exception as e:
@@ -58,27 +62,33 @@ def stater(i, q, r):
 
         try:
             with client.File() as f:
-                print("opening:", o+p)
+                # print("opening:", o+p)
                 ostatus, nothing = f.open(o+p, timeout=5)
                 print('open: ', ostatus)
-                doc['open_ok'] = ostatus.ok
-                doc['open_error'] = ostatus.error
-                doc['open_fatal'] = ostatus.fatal
-                doc['open_message'] = ostatus.message
-                doc['open_status'] = ostatus.status
-                doc['open_code'] = ostatus.code
+                addStatus(doc, 'open_', ostatus)
                 if ostatus.ok:
                     rstatus, data = f.read(offset=0, size=1024, timeout=10)
-                    print("reading", rstatus)
-                    doc['read_ok'] = rstatus.ok
-                    doc['read_error'] = rstatus.error
-                    doc['read_fatal'] = rstatus.fatal
-                    doc['read_message'] = rstatus.message
-                    doc['read_status'] = rstatus.status
-                    doc['read_code'] = rstatus.code
-                    # f.close(timeout=10) # not needed
+                    print("read:", rstatus)
+                    addStatus(doc, 'read_', rstatus)
         except Exception as e:
-            print('issue reading file.', e)
+            print('issue reading file from origin.', e)
+
+        if 'read_ok' not in doc or not doc['read_ok']:
+            r.put(doc, block=True, timeout=0.1)
+            continue
+
+        try:
+            with client.File() as f:
+                # print("opening through xcache:", c+'//'+o+p)
+                xostatus, nothing = f.open(c+'//'+o+p, timeout=5)
+                print('xopen: ', xostatus)
+                addStatus(doc, 'xopen_', xostatus)
+                if xostatus.ok:
+                    xrstatus, data = f.read(offset=0, size=1024, timeout=10)
+                    print("xread: ", xrstatus)
+                    addStatus(doc, 'xread_', xrstatus)
+        except Exception as e:
+            print('issue reading file from xcache.', e)
 
         r.put(doc, block=True, timeout=0.1)
 
