@@ -186,6 +186,8 @@ if __name__ == "__main__":
         doc = res['hits']['hits'][i]['_source']
         ndoc = {k: doc[k] for k in keep}
         # print(ndoc)
+        if 'root://localhost' in ndoc['url']:
+            continue
         q.put(ndoc)
 
     r = Queue()
