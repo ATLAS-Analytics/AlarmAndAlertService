@@ -82,14 +82,13 @@ def stater(i, q, r):
 
         r.put(doc, block=True, timeout=0.1)
 
-    print('Thread done.')
-    print("===>", q.qsize())
+    print(f'Thread done. Elements: {q.qsize()}, empty: {q.empty()}')
 
 
 def store(q, r):
     print("storring results.")
     allDocs = []
-    while not q.empty() and not r.empty():
+    while not q.empty() or not r.empty():
         while not r.empty():
             doc = r.get()
             allDocs.append(doc)
