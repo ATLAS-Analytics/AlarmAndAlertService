@@ -52,6 +52,8 @@ def stater(i, q, r):
             print("stat:", status)  # , statInfo)
             addStatus(doc, '', status)
             doc['_index'] = "remote_io_retries"
+            doc['xcache'] = c
+            doc['origin'] = o
             doc['timestamp'] = int(time.time()*1000)
         except Exception as e:
             print('issue stating file.', e)
