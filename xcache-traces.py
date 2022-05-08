@@ -16,7 +16,7 @@ from multiprocessing import Process, Queue
 from XRootD import client
 
 nhours = 1
-nproc = 3
+nproc = 5
 procs = []
 
 
@@ -86,16 +86,19 @@ def stater(i, q, r):
     print("===>", q.qsize())
 
 
-def store(r):
-    print("getting results.")
+def store(q, r):
+    print("storring results.")
     allDocs = []
-    while not r.empty():
-        doc = r.get()
-        allDocs.append(doc)
+    while not q.empty() and not r.empty():
+        while not r.empty():
+            doc = r.get()
+            allDocs.append(doc)
+        print('received results:', len(allDocs))
+        time.sleep(5)
+
     try:
         print('storing results in ES.')
-        res = helpers.bulk(es, allDocs,
-                           raise_on_exception=True, request_timeout=60)
+        res = helpers.bulk(es, allDocs, raise_on_exception=True)
         print("inserted:", res[0], '\tErrors:', res[1])
     except es_exceptions.ConnectionError as e:
         print('ConnectionError ', e)
@@ -107,6 +110,7 @@ def store(r):
             print(i)
     except Exception as e:
         print('Something seriously wrong happened.', e)
+    print('done storing.')
 
 
 if __name__ == "__main__":
@@ -116,8 +120,8 @@ if __name__ == "__main__":
 
     es = Elasticsearch(
         hosts=[{'host': config['ES_HOST'], 'port':9200, 'scheme':'https'}],
-        http_auth=(config['ES_USER'], config['ES_PASS']),
-        request_timeout=60)
+        basic_auth=(config['ES_USER'], config['ES_PASS']))
+    es.options(request_timeout=60)
 
     if es.ping():
         print('connected to ES.')
@@ -179,11 +183,13 @@ if __name__ == "__main__":
         p.start()
         procs.append(p)
 
-    for i in range(nproc):
+    p = Process(target=store, args=(q, r))
+    p.start()
+    procs.append(p)
+    for i in range(nproc+1):
         procs[i].join()
 
     print("Done testing.")
-    store(r)
 
 # if len(tkids) > 0:
 #     ALARM = alarms('Analytics', 'Frontier', 'Bad SQL queries')
