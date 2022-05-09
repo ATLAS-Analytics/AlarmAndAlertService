@@ -157,9 +157,6 @@ if __name__ == "__main__":
                     "wildcard": {"url": {"value": "root*//root*"}}
                 },
                 {
-                    "term": {"clientState": "FAILED_REMOTE_OPEN"}
-                },
-                {
                     "range": {
                         "@timestamp": {
                             "gte": starttime,
@@ -168,6 +165,14 @@ if __name__ == "__main__":
                         }
                     }
                 }
+            ],
+            "must_not": [
+                {
+                    "term": {"stateReason": "OK"}
+                },
+                {
+                    "term": {"stateReason": "direct_access"}
+                },
             ]
         }
     }
@@ -177,7 +182,7 @@ if __name__ == "__main__":
     print('total results:', results)
 
     keep = [
-        'stateReason', 'scope', 'filename', 'eventType', 'localSite',
+        'clientState', 'stateReason', 'scope', 'filename', 'eventType', 'localSite',
         'dataset', 'filesize', 'timeStart', 'hostname', 'taskid', 'url', 'remoteSite', 'pq'
     ]
 
