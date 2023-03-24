@@ -174,9 +174,9 @@ if df_w.shape[0] > 0:
         body += '\nhttps://its.cern.ch/jira/browse/ADCDPA-1'
         body += '\n To change your alerts preferences please use the following link:\n'+u.link
         body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
-        #A.sendMail(test_name, u.email, body)
+        # A.sendMail(test_name, u.email, body)
         # print(body)
-    #A.addAlert(test_name, u.name, str(df_w.shape[0])+' users with huge walltime.')
+    # A.addAlert(test_name, u.name, str(df_w.shape[0])+' users with huge walltime.')
 else:
     print('No Alarm')
 
@@ -186,46 +186,44 @@ else:
 
 # %%
 s = {
-    "size": 0,  # get one job entry only for debugging purposes
-    'query': {
-        'bool': {
-            'must': [
-                {"term": {"prodsourcelabel": "user"}},
-                {'range': {
-                    'modificationtime': {
-                        "gte": "now-1d",
-                        "lt":  "now"}
-                }
-                },
-                {'bool': {
-                    'must_not': [
-                        {"term": {"produsername": "gangarbt"}},
-                        {"term": {"processingtype": "pmerge"}},
-                        {"term": {"jobstatus": "closed"}},
-                        {"term": {"jobstatus": "cancelled"}},
-                        {'exists': {"field": "workinggroup"}}]
-                }
-                }
-            ],
-        }
-    },
-    "aggs": {
-        "users": {
-            "terms": {
-                "field": "produsername",
-                "order": {"inputsize_sum": "desc"},
-                "size": 10
-            },
-            "aggs": {
-                "inputsize_sum": {
-                    "sum": {"field": "inputfilebytes"}
-                },
+    'bool': {
+        'must': [
+            {"term": {"prodsourcelabel": "user"}},
+            {'range': {
+                'modificationtime': {
+                    "gte": "now-1d",
+                    "lt":  "now"}
             }
+            },
+            {'bool': {
+                'must_not': [
+                    {"term": {"produsername": "gangarbt"}},
+                    {"term": {"processingtype": "pmerge"}},
+                    {"term": {"jobstatus": "closed"}},
+                    {"term": {"jobstatus": "cancelled"}},
+                    {'exists': {"field": "workinggroup"}}]
+            }
+            }
+        ],
+    }
+}
+ag = {
+    "users": {
+        "terms": {
+            "field": "produsername",
+            "order": {"inputsize_sum": "desc"},
+            "size": 10
+        },
+        "aggs": {
+            "inputsize_sum": {
+                "sum": {"field": "inputfilebytes"}
+            },
         }
     }
 }
 
-res = es.search(index=ind, body=s, request_timeout=12000)
+
+res = es.search(index=ind, query=s, aggs=ag, size=0, request_timeout=12000)
 # print(res)
 
 
@@ -264,9 +262,9 @@ if df_i.shape[0] > 0:
         body += '\nhttps://its.cern.ch/jira/browse/ADCDPA-1'
         body += '\n To change your alerts preferences please use the following link:\n'+u.link
         body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
-        #A.sendMail(test_name, u.email, body)
+        # A.sendMail(test_name, u.email, body)
         # print(body)
-        #A.addAlert(test_name, u.name, str(df_w.shape[0])+' users with huge walltime.')
+        # A.addAlert(test_name, u.name, str(df_w.shape[0])+' users with huge walltime.')
 else:
     print('No Alarm')
 
@@ -276,47 +274,44 @@ else:
 
 # %%
 s = {
-    "size": 0,  # get one job entry only for debugging purposes
-    'query': {
-        'bool': {
-            'must': [
-                {"term": {"prodsourcelabel": "user"}},
-                {'range': {
-                    'modificationtime': {
-                        "gte": "now-1d",
-                        "lt":  "now"}
-                }
-                },
-                {'bool': {
-                    'must_not': [
-                        {"term": {"produsername": "gangarbt"}},
-                        {"term": {"processingtype": "pmerge"}},
-                        {"term": {"jobstatus": "cancelled"}},
-                        {"term": {"jobstatus": "closed"}}
-                    ]
-                }
-                }
-            ],
-        }
-    },
-    "aggs": {
-        "status": {
-            "terms": {
-                "field": "jobstatus",
-                "order": {"corecount_sum": "desc"},
-                "size": 5
-            },
-            "aggs": {
-                "corecount_sum": {
-                    "sum": {"field": "actualcorecount"}
-                },
+    'bool': {
+        'must': [
+            {"term": {"prodsourcelabel": "user"}},
+            {'range': {
+                'modificationtime': {
+                    "gte": "now-1d",
+                    "lt":  "now"}
             }
+            },
+            {'bool': {
+                'must_not': [
+                    {"term": {"produsername": "gangarbt"}},
+                    {"term": {"processingtype": "pmerge"}},
+                    {"term": {"jobstatus": "cancelled"}},
+                    {"term": {"jobstatus": "closed"}}
+                ]
+            }
+            }
+        ],
+    }
+}
+ag = {
+    "status": {
+        "terms": {
+            "field": "jobstatus",
+            "order": {"corecount_sum": "desc"},
+            "size": 5
+        },
+        "aggs": {
+            "corecount_sum": {
+                "sum": {"field": "actualcorecount"}
+            },
         }
     }
 }
 
 
-res = es.search(index=ind, body=s, request_timeout=12000)
+res = es.search(index=ind, query=s, aggs=ag, size=0, request_timeout=12000)
 # print(res)
 
 agg = res['aggregations']['status']['buckets']
@@ -371,78 +366,73 @@ else:
 # <h3>Users with large number of failing jobs (>1000) and retries (>1.5) </h3>
 
 # %%
-s = {
-    "size": 0,
-    "_source": {
-        "excludes": []
-    },
-    "aggs": {
-        "users": {
-            "terms": {
-                "field": "produsername",
-                "size": 20,
-                "order": {
-                    "_count": "desc"
+ag = {
+    "users": {
+        "terms": {
+            "field": "produsername",
+            "size": 20,
+            "order": {
+                "_count": "desc"
+            }
+        },
+        "aggs": {
+            "cpuconsumptiontime": {
+                "sum": {
+                    "field": "cpuconsumptiontime"
                 }
             },
-            "aggs": {
-                "cpuconsumptiontime": {
-                    "sum": {
-                        "field": "cpuconsumptiontime"
-                    }
-                },
-                "attemptnr": {
-                    "avg": {
-                        "field": "attemptnr"
-                    }
-                },
-                "jeditaskid": {
-                    "top_hits": {
-                        "docvalue_fields": [
-                            "jeditaskid"
-                        ],
-                        "_source": "jeditaskid",
-                        "size": 1,
-                        "sort": [
-                            {
-                                "jeditaskid": {
-                                    "order": "desc"
-                                }
+            "attemptnr": {
+                "avg": {
+                    "field": "attemptnr"
+                }
+            },
+            "jeditaskid": {
+                "top_hits": {
+                    "docvalue_fields": [
+                        "jeditaskid"
+                    ],
+                    "_source": "jeditaskid",
+                    "size": 1,
+                    "sort": [
+                        {
+                            "jeditaskid": {
+                                "order": "desc"
                             }
-                        ]
-                    }
+                        }
+                    ]
                 }
             }
-        }
-    },
-    "query": {
-        "bool": {
-            "must": [
-                {
-                    "query_string": {
-                        "query": "(prodsourcelabel:user) AND (NOT produsername:\"gangarbt\") AND (NOT processingtype:pmerge)",
-                        "analyze_wildcard": "true",
-                        "lowercase_expanded_terms": "false"
-                    }
-                },
-                {
-
-                    "range": {
-                        'modificationtime': {
-                            "gte": "now-1d",
-                            "lt":  "now"}
-                    }
-                }
-            ],
-            "filter": [],
-            "should": [],
-            "must_not": []
         }
     }
 }
 
+s = {
+    "bool": {
+        "must": [
+            {
+                "query_string": {
+                    "query": "(prodsourcelabel:user) AND (NOT produsername:\"gangarbt\") AND (NOT processingtype:pmerge)",
+                    "analyze_wildcard": "true",
+                    "lowercase_expanded_terms": "false"
+                }
+            },
+            {
 
-res = es.search(index=ind, body=s, request_timeout=12000)
+                "range": {
+                    'modificationtime': {
+                        "gte": "now-1d",
+                        "lt":  "now"}
+                }
+            }
+        ],
+        "filter": [],
+        "should": [],
+        "must_not": []
+    }
+}
+
+
+res = es.search(index=ind, query=s, aggs=ag, size=0, request_timeout=12000)
 # print(res)
 
 agg = res['aggregations']['users']['buckets']

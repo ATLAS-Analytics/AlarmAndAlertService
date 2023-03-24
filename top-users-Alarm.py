@@ -32,42 +32,40 @@ A = alerts.alerts()
 # <h3>convert walltime in number of cores used per day, by assuming all jobs are single core</h3>
 
 s = {
-    "size": 0,
-    'query': {
-        'bool': {
-            'must': [
-                {"term": {"prodsourcelabel": "user"}},
-                {'range': {
-                    'modificationtime': {
-                        "gte": "now-1d",
-                        "lt":  "now"}
-                }
-                },
-                {'bool': {
-                    'must_not': [
-                        {"term": {"produsername": "gangarbt"}},
-                        {"term": {"processingtype": "pmerge"}},
-                        # only users without workinggroup priviledges
-                        {'exists': {"field": "workinggroup"}}
-                    ]
-                }
-                }
-            ],
-        }
-    },
-    "aggs": {
-        "users": {
-            "terms": {
-                "field": "produsername",
-                "order": {"walltime_core_sum": "desc"},
-                "size": 10
+    'bool': {
+        'must': [
+            {"term": {"prodsourcelabel": "user"}},
+            {'range': {
+                'modificationtime': {
+                    "gte": "now-1d",
+                    "lt":  "now"}
+            }
             },
-            "aggs": {
-                "walltime_core_sum": {
-                    "sum": {
-                        "script": {   # use scripted field to calculate corecount
-                            "inline": "def core=doc['actualcorecount'].value; if (core!=null) {return doc['wall_time'].value * core} else {return doc['wall_time'].value}"
-                        }
+            {'bool': {
+                'must_not': [
+                    {"term": {"produsername": "gangarbt"}},
+                    {"term": {"processingtype": "pmerge"}},
+                    # only users without workinggroup priviledges
+                    {'exists': {"field": "workinggroup"}}
+                ]
+            }
+            }
+        ],
+    }
+}
+
+ag = {
+    "users": {
+        "terms": {
+            "field": "produsername",
+            "order": {"walltime_core_sum": "desc"},
+            "size": 10
+        },
+        "aggs": {
+            "walltime_core_sum": {
+                "sum": {
+                    "script": {   # use scripted field to calculate corecount
+                        "inline": "def core=doc['actualcorecount'].value; if (core!=null) {return doc['wall_time'].value * core} else {return doc['wall_time'].value}"
                     }
                 }
             }
@@ -75,7 +73,8 @@ s = {
     }
 }
 
-res = es.search(index=ind, body=s, request_timeout=12000)
+
+res = es.search(index=ind, query=s, aggs=ag, size=0, request_timeout=12000)
 # print(res)
 
 agg = res['aggregations']['users']['buckets']
@@ -117,46 +116,44 @@ else:
 # <h3>get top 10 users/24 hours for inputfilebytes, and filter out sum input size > 500 TB</h3>
 
 s = {
-    "size": 0,  # get one job entry only for debugging purposes
-    'query': {
-        'bool': {
-            'must': [
-                {"term": {"prodsourcelabel": "user"}},
-                {'range': {
-                    'modificationtime': {
-                        "gte": "now-1d",
-                        "lt":  "now"}
-                }
-                },
-                {'bool': {
-                    'must_not': [
-                        {"term": {"produsername": "gangarbt"}},
-                        {"term": {"processingtype": "pmerge"}},
-                        {"term": {"jobstatus": "closed"}},
-                        {"term": {"jobstatus": "cancelled"}},
-                        {'exists': {"field": "workinggroup"}}]
-                }
-                }
-            ],
-        }
-    },
-    "aggs": {
-        "users": {
-            "terms": {
-                "field": "produsername",
-                "order": {"inputsize_sum": "desc"},
-                "size": 10
-            },
-            "aggs": {
-                "inputsize_sum": {
-                    "sum": {"field": "inputfilebytes"}
-                },
+    'bool': {
+        'must': [
+            {"term": {"prodsourcelabel": "user"}},
+            {'range': {
+                'modificationtime': {
+                    "gte": "now-1d",
+                    "lt":  "now"}
             }
+            },
+            {'bool': {
+                'must_not': [
+                    {"term": {"produsername": "gangarbt"}},
+                    {"term": {"processingtype": "pmerge"}},
+                    {"term": {"jobstatus": "closed"}},
+                    {"term": {"jobstatus": "cancelled"}},
+                    {'exists': {"field": "workinggroup"}}]
+            }
+            }
+        ],
+    }
+}
+
+ag = {
+    "users": {
+        "terms": {
+            "field": "produsername",
+            "order": {"inputsize_sum": "desc"},
+            "size": 10
+        },
+        "aggs": {
+            "inputsize_sum": {
+                "sum": {"field": "inputfilebytes"}
+            },
         }
     }
 }
 
-res = es.search(index=ind, body=s, request_timeout=12000)
+res = es.search(index=ind, query=s, size=0, aggs=ag, request_timeout=12000)
 # print(res)
 
 agg = res['aggregations']['users']['buckets']
@@ -199,47 +196,45 @@ else:
 # <h3>Notify if user job efficiency drops before 70%</h3>
 
 s = {
-    "size": 0,  # get one job entry only for debugging purposes
-    'query': {
-        'bool': {
-            'must': [
-                {"term": {"prodsourcelabel": "user"}},
-                {'range': {
-                    'modificationtime': {
-                        "gte": "now-1d",
-                        "lt":  "now"}
-                }
-                },
-                {'bool': {
-                    'must_not': [
-                        {"term": {"produsername": "gangarbt"}},
-                        {"term": {"processingtype": "pmerge"}},
-                        {"term": {"jobstatus": "cancelled"}},
-                        {"term": {"jobstatus": "closed"}}
-                    ]
-                }
-                }
-            ],
-        }
-    },
-    "aggs": {
-        "status": {
-            "terms": {
-                "field": "jobstatus",
-                "order": {"corecount_sum": "desc"},
-                "size": 5
-            },
-            "aggs": {
-                "corecount_sum": {
-                    "sum": {"field": "actualcorecount"}
-                },
+    'bool': {
+        'must': [
+            {"term": {"prodsourcelabel": "user"}},
+            {'range': {
+                'modificationtime': {
+                    "gte": "now-1d",
+                    "lt":  "now"}
             }
+            },
+            {'bool': {
+                'must_not': [
+                    {"term": {"produsername": "gangarbt"}},
+                    {"term": {"processingtype": "pmerge"}},
+                    {"term": {"jobstatus": "cancelled"}},
+                    {"term": {"jobstatus": "closed"}}
+                ]
+            }
+            }
+        ],
+    }
+}
+
+ag = {
+    "status": {
+        "terms": {
+            "field": "jobstatus",
+            "order": {"corecount_sum": "desc"},
+            "size": 5
+        },
+        "aggs": {
+            "corecount_sum": {
+                "sum": {"field": "actualcorecount"}
+            },
         }
     }
 }
 
 
-res = es.search(index=ind, body=s, request_timeout=12000)
+res = es.search(index=ind, query=s, aggs=ag, size=0, request_timeout=12000)
 # print(res)
 
 agg = res['aggregations']['status']['buckets']
@@ -292,50 +287,48 @@ else:
 # <h3>get name of users with >70 retries in last 24 hours, should we also add a lower limit on the number of jobs?</h3>
 
 s = {
-    "size": 0,  # get one job entry only for debugging purposes
-    'query': {
-        'bool': {
-            'must': [
-                {"term": {"prodsourcelabel": "user"}},  # add jobstatus failed
-                {"term": {"jobstatus": "failed"}},
-                {'range': {
-                    'modificationtime': {
-                        "gte": "now-1d",
-                        "lt":  "now"}
-                }},
-                {'range': {
-                    'attemptnr': {
-                        "gte": "999",  # "70",
-                        "lt":  "1000"},
+    'bool': {
+        'must': [
+            {"term": {"prodsourcelabel": "user"}},  # add jobstatus failed
+            {"term": {"jobstatus": "failed"}},
+            {'range': {
+                'modificationtime': {
+                    "gte": "now-1d",
+                    "lt":  "now"}
+            }},
+            {'range': {
+                'attemptnr': {
+                    "gte": "999",  # "70",
+                    "lt":  "1000"},
 
-                }},
-                {'bool': {
-                    'must_not': [
-                        {"term": {"produsername": "gangarbt"}},
-                        {"term": {"processingtype": "pmerge"}},
-                    ]
-                }
-                }
-            ],
-        }
-    },
-    "aggs": {
-        "status": {
-            "terms": {
-                "field": "produsername",
-                "order": {"corecount_sum": "desc"},
-                "size": 5
-            },
-            "aggs": {
-                "corecount_sum": {
-                    "sum": {"field": "actualcorecount"}
-                },
+            }},
+            {'bool': {
+                'must_not': [
+                    {"term": {"produsername": "gangarbt"}},
+                    {"term": {"processingtype": "pmerge"}},
+                ]
             }
+            }
+        ],
+    }
+}
+ag = {
+    "status": {
+        "terms": {
+            "field": "produsername",
+            "order": {"corecount_sum": "desc"},
+            "size": 5
+        },
+        "aggs": {
+            "corecount_sum": {
+                "sum": {"field": "actualcorecount"}
+            },
         }
     }
 }
 
-res = es.search(index=ind, body=s, request_timeout=12000)
+
+res = es.search(index=ind, query=s, aggs=ag, size=0, request_timeout=12000)
 # print(res)
 
 agg = res['aggregations']['status']['buckets']
@@ -348,7 +341,7 @@ if df_a.shape[0] > 0:
     df_a = df_a.drop("doc_count", 1)
 
     # LIMIT_JOBS = 5 #for testing
-    #df_a = df_a[df_a["corecount_sum.value"] > LIMIT_JOBS]
+    # df_a = df_a[df_a["corecount_sum.value"] > LIMIT_JOBS]
     # display(df_a)
 
     df_a.columns = ['jobs', 'user']

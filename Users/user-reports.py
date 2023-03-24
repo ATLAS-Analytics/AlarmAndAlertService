@@ -32,74 +32,71 @@ A = alerts.alerts()
 
 def user_jobs_aggregations(user, days):
     s = {
-        "size": 0,
-        'query': {
-            'bool': {
-                'must': [
-                    {"term": {"produsername": user}},
-                    {'range': {'modificationtime': {"gte": "now-" + str(days) + "d"}}
-                     }
-                ]
+        'bool': {
+            'must': [
+                {"term": {"produsername": user}},
+                {'range': {'modificationtime': {"gte": "now-" + str(days) + "d"}}
+                 }
+            ]
+        }
+    }
+    ag = {
+        "jobstatus": {
+            "terms": {
+                "field": "jobstatus",
+                "size": 5,
+                "order": {
+                    "_count": "desc"
+                }
             }
         },
-        "aggs": {
-            "jobstatus": {
-                "terms": {
-                    "field": "jobstatus",
-                    "size": 5,
-                    "order": {
-                        "_count": "desc"
-                    }
+        "cpueff": {
+            "avg": {
+                "script": {
+                    "inline": "(doc['actualcorecount'].value) ? doc['cpu_eff'].value*100/doc['actualcorecount'].value : 0",
+                    "lang": "expression"
                 }
-            },
-            "cpueff": {
-                "avg": {
-                    "script": {
-                        "inline": "(doc['actualcorecount'].value) ? doc['cpu_eff'].value*100/doc['actualcorecount'].value : 0",
-                        "lang": "expression"
-                    }
+            }
+        },
+        "inputfilebytes": {
+            "sum": {
+                "field": "inputfilebytes"
+            }
+        },
+        "outputfilebytes": {
+            "sum": {
+                "field": "outputfilebytes"
+            }
+        },
+        "walltimespent": {
+            "sum": {
+                "script": {
+                    "inline": "def core=doc['actualcorecount'].value; if (core!=null) {return doc['wall_time'].value * core} else {return doc['wall_time'].value}",
+                    "lang": "painless"
                 }
-            },
-            "inputfilebytes": {
-                "sum": {
-                    "field": "inputfilebytes"
-                }
-            },
-            "outputfilebytes": {
-                "sum": {
-                    "field": "outputfilebytes"
-                }
-            },
-            "walltimespent": {
-                "sum": {
-                    "script": {
-                        "inline": "def core=doc['actualcorecount'].value; if (core!=null) {return doc['wall_time'].value * core} else {return doc['wall_time'].value}",
-                        "lang": "painless"
-                    }
-                }
-            },
-            "cputimespent": {
-                "sum": {
-                    "field": "cpuconsumptiontime"
-                }
-            },
-            "tasks": {
-                "cardinality": {
-                    "field": "jeditaskid"
-                }
-            },
-            "evps": {
-                "avg": {
-                    "script": {
-                        "inline": "(doc['nevents'].value && doc['actualcorecount'].value && doc['wall_time'].value) ? doc['nevents'].value/doc['wall_time'].value/doc['actualcorecount'].value : 0",
-                        "lang": "expression"
-                    }
+            }
+        },
+        "cputimespent": {
+            "sum": {
+                "field": "cpuconsumptiontime"
+            }
+        },
+        "tasks": {
+            "cardinality": {
+                "field": "jeditaskid"
+            }
+        },
+        "evps": {
+            "avg": {
+                "script": {
+                    "inline": "(doc['nevents'].value && doc['actualcorecount'].value && doc['wall_time'].value) ? doc['nevents'].value/doc['wall_time'].value/doc['actualcorecount'].value : 0",
+                    "lang": "expression"
                 }
             }
         }
     }
 
-    res = es.search(index="jobs", body=s)
+    res = es.search(index="jobs", query=s, aggs=ag, size=0)
 #     print(res)
 
     if res['hits']['total']['value'] == 0:
@@ -149,61 +146,58 @@ def user_jobs_aggregations(user, days):
 
 def user_memory_aggregations(user, days):
     s = {
-        "size": 0,
-        'query': {
-            'bool': {
-                'must': [
-                    {"term": {"produsername": user}},
-                    {'range': {'modificationtime': {"gte": "now-" + str(days) + "d"}}
-                     }
-                ]
-            }
-        },
-        "aggs": {
-            "jobstatus": {
-                "terms": {
-                    "field": "jobstatus",
-                    "size": 5,
-                    "order": {
-                        "_count": "desc"
+        'bool': {
+            'must': [
+                {"term": {"produsername": user}},
+                {'range': {'modificationtime': {"gte": "now-" + str(days) + "d"}}
+                 }
+            ]
+        }
+    }
+    ag = {
+        "jobstatus": {
+            "terms": {
+                "field": "jobstatus",
+                "size": 5,
+                "order": {
+                    "_count": "desc"
+                }
+            },
+            "aggs": {
+                "pss": {
+                    "avg": {
+                        "field": "avgpss"
                     }
                 },
-                "aggs": {
-                    "pss": {
-                        "avg": {
-                            "field": "avgpss"
+                "rss": {
+                    "avg": {
+                        "script": {
+                            "inline": "def avgrss = doc['avgrss'].value; if(avgrss!=null) {return avgrss/1024;} else {return 0;}",
+                            "lang": "painless"
                         }
-                    },
-                    "rss": {
-                        "avg": {
-                            "script": {
-                                "inline": "def avgrss = doc['avgrss'].value; if(avgrss!=null) {return avgrss/1024;} else {return 0;}",
-                                "lang": "painless"
-                            }
+                    }
+                },
+                "swap": {
+                    "avg": {
+                        "script": {
+                            "inline": "def avgswap = doc['avgswap'].value; if(avgswap!=null) {return avgswap/1024;} else {return 0;}",
+                            "lang": "painless"
                         }
-                    },
-                    "swap": {
-                        "avg": {
-                            "script": {
-                                "inline": "def avgswap = doc['avgswap'].value; if(avgswap!=null) {return avgswap/1024;} else {return 0;}",
-                                "lang": "painless"
-                            }
+                    }
+                },
+                "vmem": {
+                    "avg": {
+                        "script": {
+                            "inline": "def avgvmem = doc['avgvmem'].value; if(avgvmem!=null) {return avgvmem/1024;} else {return 0;}",
+                            "lang": "painless"
                         }
-                    },
-                    "vmem": {
-                        "avg": {
-                            "script": {
-                                "inline": "def avgvmem = doc['avgvmem'].value; if(avgvmem!=null) {return avgvmem/1024;} else {return 0;}",
-                                "lang": "painless"
-                            }
-                        }
-                    },
-                    "maxpss": {
-                        "avg": {
-                            "script": {
-                                "inline": "def maxpss = doc['maxpss'].value; if(maxpss!=null) {return maxpss/1024;} else {return 0;}",
-                                "lang": "painless"
-                            }
+                    }
+                },
+                "maxpss": {
+                    "avg": {
+                        "script": {
+                            "inline": "def maxpss = doc['maxpss'].value; if(maxpss!=null) {return maxpss/1024;} else {return 0;}",
+                            "lang": "painless"
                         }
                     }
                 }
@@ -211,7 +205,7 @@ def user_memory_aggregations(user, days):
         }
     }
 
-    res = es.search(index="jobs", body=s)
+    res = es.search(index="jobs", query=s, aggs=ag, size=0)
 #     print(res)
 
     if res['hits']['total']['value'] == 0:
@@ -236,37 +230,35 @@ def user_memory_aggregations(user, days):
 
 def user_IO_aggregations(user, days):
     s = {
-        "size": 0,
-        'query': {
-            'bool': {
-                'must': [
-                    {"term": {"produsername": user}},
-                    {'range': {'modificationtime': {"gte": "now-" + str(days) + "d"}}
-                     }
-                ]
-            }
-        },
-        "aggs": {
-            "jobstatus": {
-                "terms": {
-                    "field": "jobstatus",
-                    "size": 5,
-                    "order": {
-                        "_count": "desc"
+        'bool': {
+            'must': [
+                {"term": {"produsername": user}},
+                {'range': {'modificationtime': {"gte": "now-" + str(days) + "d"}}
+                 }
+            ]
+        }
+    }
+
+    ag = {
+        "jobstatus": {
+            "terms": {
+                "field": "jobstatus",
+                "size": 5,
+                "order": {
+                    "_count": "desc"
+                }
+            },
+            "aggs": {
+                "Input size": {
+                    "avg": {
+                        "field": "inputfilebytes"
                     }
                 },
-                "aggs": {
-                    "Input size": {
-                        "avg": {
-                            "field": "inputfilebytes"
-                        }
-                    },
-                    "Actually read": {
-                        "avg": {
-                            "script": {
-                                "inline": "def IObytesRead = doc['IObytesRead'].value; if(IObytesRead!=null) {return IObytesRead/1024;} else {return 0;}",
-                                "lang": "painless"
-                            }
+                "Actually read": {
+                    "avg": {
+                        "script": {
+                            "inline": "def IObytesRead = doc['IObytesRead'].value; if(IObytesRead!=null) {return IObytesRead/1024;} else {return 0;}",
+                            "lang": "painless"
                         }
                     }
                 }
@@ -274,7 +266,7 @@ def user_IO_aggregations(user, days):
         }
     }
 
-    res = es.search(index="jobs", body=s)
+    res = es.search(index="jobs", query=s, aggs=ag, size=0)
 #     print(res)
     if res['hits']['total']['value'] == 0:
         return 0
@@ -301,52 +293,50 @@ def user_IO_aggregations(user, days):
 
 def user_disk_aggregations(user):
     s = {
-        "size": 0,
-        "query": {
-            "bool": {
-                "must": [
-                    {"term": {"owner": user}},
-                    {"range": {"timestamp": {"gte": "now-1d"}}
-                     }
-                ]
-            }
-        },
-        "aggs": {
-            "dtype": {
-                "terms": {
-                    "field": "dtype",
-                    "size": 10,
-                    "order": {
-                        "size": "desc"
+        "bool": {
+            "must": [
+                {"term": {"owner": user}},
+                {"range": {"timestamp": {"gte": "now-1d"}}
+                 }
+            ]
+        }
+    }
+    ag = {
+        "dtype": {
+            "terms": {
+                "field": "dtype",
+                "size": 10,
+                "order": {
+                    "size": "desc"
+                }
+            },
+            "aggs": {
+                "size": {
+                    "sum": {
+                        "field": "size"
                     }
                 },
-                "aggs": {
-                    "size": {
-                        "sum": {
-                            "field": "size"
+                "site": {
+                    "terms": {
+                        "field": "site",
+                        "size": 5,
+                        "order": {
+                            "subsize": "desc"
                         }
                     },
-                    "site": {
-                        "terms": {
-                            "field": "site",
-                            "size": 5,
-                            "order": {
-                                "subsize": "desc"
-                            }
-                        },
-                        "aggs": {
-                            "subsize": {
-                                "sum": {
-                                    "field": "size"
-                                }
+                    "aggs": {
+                        "subsize": {
+                            "sum": {
+                                "field": "size"
                             }
                         }
-                    }}
+                    }
+                }
             }
         }
     }
 
-    res = es.search(index="ddm_aggregated", body=s)
+    res = es.search(index="ddm_aggregated", query=s, aggs=ag, size=0)
 
     if res['hits']['total']['value'] == 0:
         return 0

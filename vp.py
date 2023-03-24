@@ -40,18 +40,15 @@ print('current time', datetime.now())
 # vp_liveness
 
 liveness_query = {
-    "size": 100,
-    "query": {
-        "bool": {
-            "must": [
-                {"range": {"timestamp": {"gte": startTime, "lte": currentTime}}},
-                {"term": {"live": False}}
-            ]
-        }
+    "bool": {
+        "must": [
+            {"range": {"timestamp": {"gte": startTime, "lte": currentTime}}},
+            {"term": {"live": False}}
+        ]
     }
 }
 
-res = es.search(index='vp_liveness', body=liveness_query)
+res = es.search(index='vp_liveness', query=liveness_query, size=100)
 if res['hits']['total']['value'] == 0:
     print('All is fine.')
 else:
