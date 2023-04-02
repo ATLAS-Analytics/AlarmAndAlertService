@@ -6,6 +6,7 @@
 # make it create Alarms.
 # document what exactly it retries
 # check it actually writes out when there is a small number of retries.
+# make it continuous
 
 import sys
 import datetime
