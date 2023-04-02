@@ -234,13 +234,11 @@ if __name__ == "__main__":
     for i in range(nproc):
         p = Process(target=stater, args=(i, q, r))
         p.start()
-        # procs.append(p)
+        procs.append(p)
 
     # waits for the queue to be fully processed
-    q.join()
-
-    # for i in range(nproc):
-    #     procs[i].join()
+    for i in range(nproc):
+        procs[i].join()
 
     # # creates a process to store results  ------
     # p = Process(target=store, args=(q, r))
