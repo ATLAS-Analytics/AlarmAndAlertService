@@ -6,6 +6,9 @@
 # make it create Alarms.
 # document what exactly it retries
 
+#  stateReason: direct_access can result in clientState: FOUND_ROOT or FAILED_REMOTE_OPEN
+#  stateReason: OK can result in clientState: DONE, SERVICE_ERROR, CP_TIMEOUT, COPY_ERROR
+
 import sys
 import datetime
 import time
@@ -173,10 +176,10 @@ if __name__ == "__main__":
             ],
             "must_not": [
                 {
-                    "term": {"stateReason": "OK"}
+                    "term": {"clientState": "FOUND_ROOT"}
                 },
                 {
-                    "term": {"stateReason": "direct_access"}
+                    "term": {"clientState": "DONE"}
                 },
             ]
         }
