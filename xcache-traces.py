@@ -4,10 +4,16 @@
 # ====
 # TODO
 # make it create Alarms.
-# document what exactly it retries
 
 #  stateReason: direct_access can result in clientState: FOUND_ROOT or FAILED_REMOTE_OPEN
 #  stateReason: OK can result in clientState: DONE, SERVICE_ERROR, CP_TIMEOUT, COPY_ERROR
+
+# retry status:
+# origin stat => nothing
+# origin open => open_
+# origin read => read_
+# xcache_open => xopen_
+# xcahe_read => xread_
 
 import sys
 import datetime
