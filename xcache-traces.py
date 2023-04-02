@@ -1,12 +1,10 @@
-# continuously looks up Rucio traces from UC ES,
+# looks up Rucio traces from UC ES,
 # filters bad transfers through xcaches
 # retries and classifies them
 # ====
 # TODO
 # make it create Alarms.
 # document what exactly it retries
-# check it actually writes out when there is a small number of retries.
-# make it continuous
 
 import sys
 import datetime
@@ -47,9 +45,10 @@ def addStatus(doc, step, status):
 
 
 def stater(i, q, r):
-    while True:
+    while not q.empty():
         doc = q.get()
         if doc is None:
+            q.put(None)
             break
         c, o, p = splitURL(doc['url'])
         print(f'thr:{i}, checking cache {c} origin {o} for {p}')
@@ -102,34 +101,7 @@ def stater(i, q, r):
 
         r.put(doc, block=True, timeout=0.1)
 
-    print(f'thr:{i} done. Elements: {q.qsize()}, empty: {q.empty()}')
-
-
-def store(q, r):
-    print("storring results.")
-    allDocs = []
-    while not q.empty() or not r.empty():
-        while not r.empty():
-            doc = r.get()
-            allDocs.append(doc)
-        print('received results:', len(allDocs))
-        time.sleep(5)
-
-    try:
-        print('storing results in ES.')
-        res = helpers.bulk(es, allDocs, raise_on_exception=True)
-        print("inserted:", res[0], '\tErrors:', res[1])
-    except es_exceptions.ConnectionError as e:
-        print('ConnectionError ', e)
-    except es_exceptions.TransportError as e:
-        print('TransportError ', e)
-    except helpers.BulkIndexError as e:
-        print(e[0])
-        for i in e[1]:
-            print(i)
-    except Exception as e:
-        print('Something seriously wrong happened.', e)
-    print('done storing.')
+    print(f'thr:{i} done.')
 
 
 def simple_store(r):
@@ -231,6 +203,8 @@ if __name__ == "__main__":
             continue
         q.put(ndoc)
 
+    q.put(None)
+
     # creates processes that will do retries
     for i in range(nproc):
         p = Process(target=stater, args=(i, q, r))
@@ -240,16 +214,6 @@ if __name__ == "__main__":
     # waits for the queue to be fully processed
     for i in range(nproc):
         procs[i].join()
-
-    # # creates a process to store results  ------
-    # p = Process(target=store, args=(q, r))
-    # p.start()
-    # # procs.append(p)
-
-    # # waits for all the processes to stop.
-    # r.join()
-    # # for i in range(nproc+1):
-    # #     procs[i].join()
 
     simple_store(r)
 
