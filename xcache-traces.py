@@ -48,6 +48,8 @@ def addStatus(doc, step, status):
 def stater(i, q, r):
     while True:
         doc = q.get()
+        if doc is None:
+            break
         c, o, p = splitURL(doc['url'])
         print(f'thr:{i}, checking cache {c} origin {o} for {p}')
         myclient = client.FileSystem(o)
@@ -65,7 +67,6 @@ def stater(i, q, r):
 
         if not status.ok:
             r.put(doc, block=True, timeout=0.1)
-            q.task_done()
             continue
 
         try:
@@ -83,7 +84,6 @@ def stater(i, q, r):
 
         if 'read_ok' not in doc or not doc['read_ok']:
             r.put(doc, block=True, timeout=0.1)
-            q.task_done()
             continue
 
         try:
@@ -100,7 +100,6 @@ def stater(i, q, r):
             print('issue reading file from xcache.', e)
 
         r.put(doc, block=True, timeout=0.1)
-        q.task_done()
 
     print(f'thr:{i} done. Elements: {q.qsize()}, empty: {q.empty()}')
 
