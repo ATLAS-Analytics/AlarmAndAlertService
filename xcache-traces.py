@@ -220,9 +220,9 @@ if __name__ == "__main__":
         p.start()
         procs.append(p)
 
-    # waits for the queue to be fully processed
+    # waits for the queue to be fully processed (up to 5 min.)
     for i in range(nproc):
-        procs[i].join()
+        procs[i].join(300)
 
     simple_store(r)
 
