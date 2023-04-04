@@ -59,13 +59,14 @@ def stater(i, q, r):
         if doc is None:
             q.put(None)
             break
+        fileID = doc['fileID']
         c, o, p = splitURL(doc['url'])
-        print(f'thr:{i}, checking cache {c} origin {o} for {p}')
+        print(f'thr:{i}, <{fileID}>, checking cache {c} origin {o} for {p}')
         myclient = client.FileSystem(o)
         try:
             myclient = client.FileSystem(o)
             status, statInfo = myclient.stat(p, timeout=5)
-            print("stat:", status)  # , statInfo)
+            print(f'<{fileID}> stat:{status}')  # , statInfo)
             addStatus(doc, '', status)
             doc['_index'] = "remote_io_retries"
             doc['xcache'] = c
@@ -82,11 +83,11 @@ def stater(i, q, r):
             with client.File() as f:
                 # print("opening:", o+p)
                 ostatus, nothing = f.open(o+p, timeout=5)
-                print('open: ', ostatus)
+                print(f'<{fileID}> open: {ostatus}')
                 addStatus(doc, 'open_', ostatus)
                 if ostatus.ok:
                     rstatus, data = f.read(offset=0, size=1024, timeout=10)
-                    print("read:", rstatus)
+                    print(f'<{fileID}> read: {rstatus}')
                     addStatus(doc, 'read_', rstatus)
         except Exception as e:
             print('issue reading file from origin.', e)
@@ -99,11 +100,11 @@ def stater(i, q, r):
             with client.File() as f:
                 # print("opening through xcache:", c+'//'+o+p)
                 xostatus, nothing = f.open(c+'//'+o+p, timeout=5)
-                print('xopen: ', xostatus)
+                print(f'<{fileID}> xopen: {xostatus}')
                 addStatus(doc, 'xopen_', xostatus)
                 if xostatus.ok:
                     xrstatus, data = f.read(offset=0, size=1024, timeout=10)
-                    print("xread: ", xrstatus)
+                    print(f'<{fileID}>xread: {xrstatus}')
                     addStatus(doc, 'xread_', xrstatus)
         except Exception as e:
             print('issue reading file from xcache.', e)
@@ -204,12 +205,15 @@ if __name__ == "__main__":
     r = Queue()  # a queue for results
 
     # reads the docs selected, adds them to queue 'q'
+    fileID = 0
     for i in range(results):
         doc = res['hits']['hits'][i]['_source']
         ndoc = {k: doc[k] for k in keep}
         # print(ndoc)
         if 'root://localhost' in ndoc['url']:
             continue
+        ndoc['fileID'] = fileID
+        fileID += 1
         q.put(ndoc)
 
     q.put(None)
@@ -220,9 +224,9 @@ if __name__ == "__main__":
         p.start()
         procs.append(p)
 
-    # waits for the queue to be fully processed (up to 5 min.)
+    # waits for the queue to be fully processed (up to 10 min.)
     for i in range(nproc):
-        procs[i].join(300)
+        procs[i].join(600)
 
     simple_store(r)
 
