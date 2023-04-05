@@ -27,7 +27,7 @@ from multiprocessing import Process, Queue
 
 from XRootD import client
 
-nhours = 1
+nhours = 24
 nproc = 5
 procs = []
 results = 0
