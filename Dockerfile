@@ -1,4 +1,3 @@
-# FROM ivukotic/ml_platform:latest
 FROM python:latest
 
 LABEL maintainer Ilija Vukotic <ivukotic@cern.ch>
