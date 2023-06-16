@@ -2,4 +2,3 @@ elasticsearch
 numpy
 pandas
 requests
-xrootd
