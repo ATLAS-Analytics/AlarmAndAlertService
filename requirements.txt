@@ -2,3 +2,4 @@ elasticsearch
 numpy
 pandas
 requests
+grafana_api
