@@ -5,7 +5,7 @@ from collections import defaultdict
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan
 from grafana_api.grafana_face import GrafanaFace
-from datetime import datetime
+from datetime import datetime, UTC
 from elasticsearch.helpers import bulk, BulkIndexError
 from itertools import chain
 import copy
@@ -43,32 +43,33 @@ lastDate_config = {
 }
 
 atlas_raw_query = {
-    "bool": {
-        "filter": [
-            {
-                "bool": {
-                    "should": [
-                        {
-                            "term": {
-                                "processingtype": {
-                                    "value": "gangarobot-hepscore"
+    "query": {
+        "bool": {
+            "filter": [
+                {
+                    "bool": {
+                        "should": [
+                            {
+                                "term": {
+                                    "processingtype": {
+                                        "value": "gangarobot-hepscore"
+                                    }
                                 }
                             }
-                        }
-                    ],
-                    "minimum_should_match": 1
-                }
-            },
-            {
-                "range": {
-                    "modificationtime": {
-                        "gte": "gte_replace",
-                        "lte": "lte_replace"
+                        ],
+                        "minimum_should_match": 1
                     }
-                }
-            },
-        ]
-    }
+                },
+                {
+                    "range": {
+                        "modificationtime": {
+                            "gte": "gte_replace",
+                            "lte": "lte_replace"
+                        }
+                    }
+                },
+            ]
+        }}
 }
 
 grafana_url = "https://monit-grafana.cern.ch/api/datasources/proxy/10213/_msearch?max_concurrent_shard_requests=5"
@@ -80,13 +81,6 @@ grafana_raw_query = """
             """
 
 
-def get_current_timestamp() -> int:
-    """
-    Get the current timestamp as integer.
-    """
-    return int(round(datetime.utcnow().timestamp() * 1000))
-
-
 def get_time_range_until_now(months: int = 0, days: int = 0, hours: int = 0) -> Tuple:
     """
     Get a tuple with start time and current time timestamp (int) range to query (startTime, currentTime).
@@ -95,17 +89,10 @@ def get_time_range_until_now(months: int = 0, days: int = 0, hours: int = 0) -> 
     lastDays = days + lastMonths * 30
     lastHours = hours + lastDays * 24
 
-    currentTime = get_current_timestamp()
+    currentTime = int(round(datetime.now(UTC).timestamp() * 1000))
     startTime = currentTime - lastHours * 3600000
 
     return (startTime, currentTime)
-
-
-def count_es_document(es: Elasticsearch = None, query: str = None, index: str = None) -> None:
-    """
-    Display how many documents has been retrieved from given Elasticsearch index based on given query.
-    """
-    print("Document count:", es.count(index=index, query=query))
 
 
 def prepare_grafana_query(query: str = None, startTime: int = None, currentTime: int = None) -> str:
@@ -123,8 +110,8 @@ def prepare_atlas_query(query: dict = None, startTime: int = None, currentTime: 
     """
     Replace placeholders in atlas query with given timestamps and return prepared query.
     """
-    query["bool"]["filter"][1]["range"]["modificationtime"]["gte"] = startTime
-    query["bool"]["filter"][1]["range"]["modificationtime"]["lte"] = currentTime
+    query["query"]["bool"]["filter"][1]["range"]["modificationtime"]["gte"] = startTime
+    query["query"]["bool"]["filter"][1]["range"]["modificationtime"]["lte"] = currentTime
 
     return query
 
@@ -142,7 +129,8 @@ def get_atlas_data(index: str = None, query: str = None):
             '@timestamp': hit['_source']['modificationtime']
         }
         bulk_data.append(doc)
-        print(doc)
+    print(f"loaded {len(bulk_data)} ATLAS jobs")
+    return bulk_data
 
 
 def get_grafana_data(url: str = None, query: str = None) -> List:
