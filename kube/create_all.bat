@@ -1,8 +1,9 @@
 
 kubectl create -f ./namespace.yaml
 
-kubectl delete secret  config -n aaas 
-kubectl create secret generic config -n aaas --from-file=secrets/config.json
+kubectl delete secret  config -n crons 
+kubectl create secret generic config -n crons --from-file=secrets/config.json
+kubectl create secret generic hepspec -n crons --from-file=secrets/hepspec.json
 
 kubectl create -f  ./secrets/mailgun-secret.yaml
 
