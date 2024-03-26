@@ -102,10 +102,12 @@ class user:
         self.email = data['_source']['email']
         self.subscriptions = data['_source']['subscriptions']
         self.preferences = data['_source']['preferences']
+        if 'prefered_mail' not in self.preferences or self.preferences['prefered_mail']=='':
+            self.preferences['prefered_mail']=self.email
         self.mail = ''
 
     def __str__(self):
-        out = '{} {} preferences: {}\nsubs:\n'.format(self.user, self.email, self.preferences)
+        out = f'{self.user} {self.email} preferences: {self.preferences}\nsubs:\n'
         for s in self.subscriptions:
             out += ('\t'+str(s)+'\n')
         return out
@@ -114,9 +116,9 @@ class user:
         self.mail += body+'\n\n'
 
     def addHeaderFooter(self):
-        header = 'Dear '+self.user+',\n\n\t'
+        header = f'Dear {self.user},\n\n\t'
         header += 'Herewith a list of alarms you subscribed to. '
-        header += 'You may change preferences by visiting '+config['AAAS']+'.\n'
+        header += f'Preferences may be changed by {self.email} by visiting {config['AAAS']}.\n'
         footer = 'Best regards,\n Alarm & Alert Service Team'
         self.mail = header+self.mail+footer
 
@@ -130,7 +132,7 @@ class user:
             auth=("api", mailgun_api_key),
             data={
                 "from": "ATLAS Alarm & Alert System <aaas@analytics.mwt2.org>",
-                "to": [self.email],
+                "to": [self.preferences['prefered_mail']],
                 "subject": 'Alarm & Alert System delivery',
                 "text": self.mail}
         )
@@ -176,7 +178,6 @@ if __name__ == '__main__':
             u.preferences['vacation'] = False
         if 'mail_interval' not in u.preferences:
             u.preferences['mail_interval'] = 6
-
         if u.preferences['vacation']:  # skip in on vacation
             continue
 
