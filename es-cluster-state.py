@@ -33,5 +33,5 @@ ALARM = alarms('Analytics', 'Elasticsearch', 'status')
 
 if report['status'] == 'red':
     ALARM.addAlarm(body='Alert on Elastic cluster state [ES in red]', tags=['red'])
-if report['status'] == 'yellow' and report['unassigned_shards'] > 10:
+if report['status'] == 'yellow':
     ALARM.addAlarm(body='Alert on Elastic cluster state [ES in yellow]', tags=['yellow'])
