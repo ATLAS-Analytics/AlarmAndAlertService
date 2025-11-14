@@ -72,7 +72,8 @@ class alarms:
 
     def getText(self, data):
         res = ''
-        res += time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(data['created_at']/1000))
+        res += time.strftime("%a, %d %b %Y %H:%M:%S",
+                             time.localtime(data['created_at']/1000))
         res += '\t{}/{}/{}\t\t{}\n'.format(data['category'],
                                            data['subcategory'], data['event'], data['body'])
         if 'tags' in data:
@@ -88,7 +89,8 @@ class alarms:
                 if 'c{'+v+'}' in temp:
                     temp = temp.replace('c{'+v+'}', str(len(vars[v])))
                 if 'p{'+v+'}' in temp:
-                    temp = temp.replace('p{'+v+'}', str(round(vars[v]*100, 3))+'%')
+                    temp = temp.replace(
+                        'p{'+v+'}', str(round(vars[v]*100, 3))+'%')
             res += temp
         # print(data)
         return res
@@ -102,8 +104,8 @@ class user:
         self.email = data['_source']['email']
         self.subscriptions = data['_source']['subscriptions']
         self.preferences = data['_source']['preferences']
-        if 'prefered_mail' not in self.preferences or self.preferences['prefered_mail']=='':
-            self.preferences['prefered_mail']=self.email
+        if 'prefered_mail' not in self.preferences or self.preferences['prefered_mail'] == '':
+            self.preferences['prefered_mail'] = self.email
         self.mail = ''
 
     def __str__(self):
