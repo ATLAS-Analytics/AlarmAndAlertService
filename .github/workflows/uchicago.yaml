@@ -1,0 +1,39 @@
+name: uchicago
+on:
+    pull_request:
+        branches:
+            - main
+    # Run every 6 hours
+    schedule:
+        - cron: "0 */6 * * *"
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    es-state:
+        runs-on: arc-runner-set-uchicago-alarm-alert-system
+        steps:
+            - uses: actions/checkout@v6
+
+            #   - uses: ./.github/actions/setup-globus
+            #     with:
+            #       voms-usercert: ${{ secrets.VOMS_USERCERT }}
+            #       voms-userkey: ${{ secrets.VOMS_USERKEY }}
+
+            - name: execute
+              run: ./es-cluster-state.sh
+              shell: bash
+              env:
+                  ES_HOST: ${{ secrets.ES_HOST }}
+                  ES_USER: ${{ secrets.ES_USER }}
+                  ES_PASS: ${{ secrets.ES_PASS }}
+
+            - name: upload log
+              if: always()
+              uses: actions/upload-artifact@v5
+              with:
+                  name: ${{ github.job }}-logs
+                  path: |
+                      es-cluster-state.log
