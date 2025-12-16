@@ -20,8 +20,9 @@ jobs:
               shell: bash
               env:
                   ES_HOST: ${{ secrets.ES_HOST }}
-                  ES_USER: ${{ secrets.HEPSPEC_ES_USER }}
-                  ES_PASS: ${{ secrets.HEPSPEC_ES_PASS }}
+                  HEPSPEC_ES_USER: ${{ secrets.HEPSPEC_ES_USER }}
+                  HEPSPEC_ES_PASS: ${{ secrets.HEPSPEC_ES_PASS }}
+                  HEPSPEC_TOKEN: ${{ secrets.HEPSPEC_TOKEN }}
                   AAAS: ${{ secrets.AAAS }}
                   MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
             - name: upload log
