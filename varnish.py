@@ -10,7 +10,6 @@
 # - there was at least one restart in last 1 day
 
 import sys
-import json
 from datetime import datetime
 import requests
 from alerts import alarms
@@ -18,15 +17,18 @@ from elasticsearch import Elasticsearch, exceptions as es_exceptions
 from typing import Any, Dict
 
 
-# config_path = '/config/config.json'
-config_path = 'kube/secrets/config.json'
-
-with open(config_path) as json_data:
-    config = json.load(json_data,)
+# load ES_HOST, ES_USER, ES_PASS from environment
+import os
+env = {}
+for var in ['ES_HOST', 'ES_USER', 'ES_PASS']:
+    env[var] = os.environ.get(var, None)
+    if not env[var]:
+        print('environment variable {} not set!'.format(var))
+        sys.exit(1)
 
 es = Elasticsearch(
-    hosts=[{'host': config['ES_HOST'], 'port': 9200, 'scheme': 'https'}],
-    basic_auth=(config['ES_USER'], config['ES_PASS']),
+    hosts=[{'host': env['ES_HOST'], 'port': 9200, 'scheme': 'https'}],
+    basic_auth=(env['ES_USER'], env['ES_PASS']),
     request_timeout=60)
 
 if es.ping():
