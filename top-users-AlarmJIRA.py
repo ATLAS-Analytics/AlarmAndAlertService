@@ -29,6 +29,7 @@ else:
     print('no connection to ES.')
     sys.exit(1)
 
+JG_URL = 'http://test-jgarcian.web.cern.ch/test-jgarcian/cgi-bin/usersJIRA.py'
 
 ind = 'jobs'
 
@@ -85,16 +86,13 @@ agg = res['aggregations']['users']['buckets']
 jsondata = json.dumps(agg)
 
 # print(jsondata)
-
-res = requests.post(
-    'http://test-jgarcian.web.cern.ch/test-jgarcian/cgi-bin/usersJIRA.py',
-    json=jsondata
-)
-if (res.status_code == 200):
-    print('data sent')
-else:
-    print('problem in sending data!')
-    print(res.text, res.status_code)
+try:
+    res = requests.post(
+        JG_URL,
+        json=jsondata
+    )
+except Exception as e:
+    print('Exception sending to test-jgarcian.web.cern.ch request:', e)
 
 # create df
 df_w = json_normalize(agg)
@@ -179,15 +177,13 @@ agg = res['aggregations']['users']['buckets']
 jsondata = json.dumps(agg)
 
 
-res = requests.post(
-    'http://test-jgarcian.web.cern.ch/test-jgarcian/cgi-bin/usersJIRA.py',
-    json=jsondata
-)
-if (res.status_code == 200):
-    print('data sent', res.text)
-else:
-    print('problem in sending data!')
-    print(res.text, res.status_code)
+try:
+    res = requests.post(
+        JG_URL,
+        json=jsondata
+    )
+except Exception as e:
+    print('Exception sending to test-jgarcian.web.cern.ch request:', e)
 
 # create df
 df_i = json_normalize(agg)
@@ -314,83 +310,83 @@ else:
 # should we also add a lower limit on the number of jobs?
 
 
-s = {
-    'bool': {
-        'must': [
-            {"term": {"prodsourcelabel": "user"}},  # add jobstatus failed
-            {"term": {"jobstatus": "failed"}},
-            {'range': {
-                'modificationtime': {
-                    "gte": "now-1d",
-                    "lt":  "now"}
-            }},
-            {'range': {
-                'attemptnr': {
-                    "gte": "999",  # "70",
-                    "lt":  "1000"},
+# s = {
+#     'bool': {
+#         'must': [
+#             {"term": {"prodsourcelabel": "user"}},  # add jobstatus failed
+#             {"term": {"jobstatus": "failed"}},
+#             {'range': {
+#                 'modificationtime': {
+#                     "gte": "now-1d",
+#                     "lt":  "now"}
+#             }},
+#             {'range': {
+#                 'attemptnr': {
+#                     "gte": "999",  # "70",
+#                     "lt":  "1000"},
 
-            }},
-            {'bool': {
-                'must_not': [
-                    {"term": {"produsername": "gangarbt"}},
-                    {"term": {"processingtype": "pmerge"}},
-                ]
-            }
-            }
-        ],
-    }
-}
-ag = {
-    "status": {
-        "terms": {
-            "field": "produsername",
-            "order": {"corecount_sum": "desc"},
-            "size": 5
-        },
-        "aggs": {
-            "corecount_sum": {
-                "sum": {"field": "actualcorecount"}
-            },
-        }
-    }
-}
-
-
-res = es.search(index=ind, query=s, aggs=ag, size=0)
-# print(res)
-
-agg = res['aggregations']['status']['buckets']
-# print(agg)
-
-# create df
-df_a = json_normalize(agg)
-if df_a.shape[0] > 0:
-    df_a = df_a.drop("doc_count", 1)
-
-    # LIMIT_JOBS = 5 #for testing
-    # df_a = df_a[df_a["corecount_sum.value"] > LIMIT_JOBS]
-
-    df_a.columns = ['jobs', 'user']
-    print(df_a.to_string())
+#             }},
+#             {'bool': {
+#                 'must_not': [
+#                     {"term": {"produsername": "gangarbt"}},
+#                     {"term": {"processingtype": "pmerge"}},
+#                 ]
+#             }
+#             }
+#         ],
+#     }
+# }
+# ag = {
+#     "status": {
+#         "terms": {
+#             "field": "produsername",
+#             "order": {"corecount_sum": "desc"},
+#             "size": 5
+#         },
+#         "aggs": {
+#             "corecount_sum": {
+#                 "sum": {"field": "actualcorecount"}
+#             },
+#         }
+#     }
+# }
 
 
-if df_a.shape[0] > 0:
-    print('here')
-    test_name = 'Top Analysis users [Retrial attempts]'
-    for u in S.get_immediate_subscribers(test_name):
-        body = 'Dear ' + u.name + ',\n\n'
-        body += 'the following users have jobs with more than 70 retrials in the last 24 hours:\n\n'
-        body += df_a.to_string() + '\n'
-        body += '\n To get more information about what each user is doing, please visit:\n'
-        for i in df_a['user'].iteritems():
-            body += 'https://bigpanda.cern.ch/tasks/?username=' + \
-                str(i[1]) + '\n'
-        body += '\n If deemed necessary, please contact the user to ask what he/she is doing:\n'
-        body += '\nhttps://its.cern.ch/jira/browse/ADCDPA-1'
-        body += '\n To change your alerts preferences please use the following link:\n' + u.link
-        body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
-        # A.sendMail(test_name, u.email, body)
-        # print(body)
-        # A.addAlert(test_name, u.name, str(df_a.shape[0])+' users with jobs with large retrial attempts.')
-else:
-    print('No Alarm')
+# res = es.search(index=ind, query=s, aggs=ag, size=0)
+# # print(res)
+
+# agg = res['aggregations']['status']['buckets']
+# # print(agg)
+
+# # create df
+# df_a = json_normalize(agg)
+# if df_a.shape[0] > 0:
+#     df_a = df_a.drop("doc_count", 1)
+
+#     # LIMIT_JOBS = 5 #for testing
+#     # df_a = df_a[df_a["corecount_sum.value"] > LIMIT_JOBS]
+
+#     df_a.columns = ['jobs', 'user']
+#     print(df_a.to_string())
+
+
+# if df_a.shape[0] > 0:
+#     print('here')
+#     test_name = 'Top Analysis users [Retrial attempts]'
+#     for u in S.get_immediate_subscribers(test_name):
+#         body = 'Dear ' + u.name + ',\n\n'
+#         body += 'the following users have jobs with more than 70 retrials in the last 24 hours:\n\n'
+#         body += df_a.to_string() + '\n'
+#         body += '\n To get more information about what each user is doing, please visit:\n'
+#         for i in df_a['user'].iteritems():
+#             body += 'https://bigpanda.cern.ch/tasks/?username=' + \
+#                 str(i[1]) + '\n'
+#         body += '\n If deemed necessary, please contact the user to ask what he/she is doing:\n'
+#         body += '\nhttps://its.cern.ch/jira/browse/ADCDPA-1'
+#         body += '\n To change your alerts preferences please use the following link:\n' + u.link
+#         body += '\n\nBest regards,\nATLAS Alarm & Alert Service'
+#         # A.sendMail(test_name, u.email, body)
+#         # print(body)
+#         # A.addAlert(test_name, u.name, str(df_a.shape[0])+' users with jobs with large retrial attempts.')
+# else:
+#     print('No Alarm')
