@@ -1,0 +1,33 @@
+name: uchicago
+on:
+    pull_request:
+        branches:
+            - main
+    schedule:
+        - cron: "3 3,15 * * *"
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    hepspec:
+        runs-on: arc-runner-set-uchicago-alarm-alert-system
+        steps:
+            - uses: actions/checkout@v6
+            - name: execute
+              run: ./hepspec.sh
+              shell: bash
+              env:
+                  ES_HOST: ${{ secrets.ES_HOST }}
+                  ES_USER: ${{ secrets.HEPSPEC_ES_USER }}
+                  ES_PASS: ${{ secrets.HEPSPEC_ES_PASS }}
+                  AAAS: ${{ secrets.AAAS }}
+                  MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+            - name: upload log
+              if: always()
+              uses: actions/upload-artifact@v5
+              with:
+                  name: ${{ github.job }}-logs
+                  path: |
+                      hepspec.log

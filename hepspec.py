@@ -1,3 +1,4 @@
+import os
 import sys
 import json
 import requests
@@ -14,15 +15,16 @@ from typing import List, Tuple, Dict
 panda_index = 'jobs'
 hepspec_index = 'hepspec'
 
-config_path = '/config/hepspec.json'
-# config_path = 'kube/secrets/hepspec.json'
-
-with open(config_path) as json_data:
-    config = json.load(json_data,)
+env = {}
+for var in ['ES_HOST', 'HEPSPEC_ES_USER', 'HEPSPEC_ES_PASS', 'HEPSPEC_TOKEN']:
+    env[var] = os.environ.get(var, None)
+    if not env[var]:
+        print('environment variable {} not set!'.format(var))
+        sys.exit(1)
 
 es = Elasticsearch(
-    hosts=[{'host': config['ES_HOST'], 'port':9200, 'scheme':'https'}],
-    basic_auth=(config['ES_USER'], config['ES_PASS']),
+    hosts=[{'host': env['ES_HOST'], 'port': 9200, 'scheme': 'https'}],
+    basic_auth=(env['ES_USER'], env['ES_PASS']),
     request_timeout=60)
 
 if es.ping():
@@ -34,7 +36,7 @@ else:
 
 headers = {
     'Accept': 'application/json',
-    'Authorization': f'Bearer {config["HEPSPEC_TOKEN"]}',
+    'Authorization': f'Bearer {env["HEPSPEC_TOKEN"]}',
     'Content-Type': 'application/x-ndjson'
 }
 
@@ -222,7 +224,8 @@ def prepare_es_actions(atlas_data: List = None, grafana_dict: Dict = None) -> Li
             data['_source'].update(grafana_dict[doc_id])
             grafana_update += 1
 
-    print(f"Data to be updated in ES based on ATLAS: {len(combined_data)} documents")
+    print(
+        f"Data to be updated in ES based on ATLAS: {len(combined_data)} documents")
     print(f"Combined atlas with benchmarking data: {grafana_update} documents")
     # Prepare actions for bulk indexing
     actions = [
@@ -238,7 +241,8 @@ def prepare_es_actions(atlas_data: List = None, grafana_dict: Dict = None) -> Li
 
 def main():
 
-    grafana_connection = GrafanaFace(auth=config["HEPSPEC_TOKEN"], host=grafana_url)
+    grafana_connection = GrafanaFace(
+        auth=config["HEPSPEC_TOKEN"], host=grafana_url)
 
     if es.indices.exists(index=hepspec_index):
         print(f"Index '{hepspec_index}' exists.")
@@ -246,7 +250,8 @@ def main():
         print(f"Index '{hepspec_index}' not found.")
         sys.exit(1)
 
-    startTime, currentTime = get_time_range_until_now(days=lastDate_config["days"])
+    startTime, currentTime = get_time_range_until_now(
+        days=lastDate_config["days"])
 
     atlas_query = prepare_atlas_query(
         query=atlas_raw_query, startTime=startTime, currentTime=currentTime)
@@ -257,7 +262,8 @@ def main():
     grafana_data = get_grafana_data(url=grafana_url, query=grafana_query)
     grafana_processed_dict = process_grafana_data(grafana_data=grafana_data)
 
-    actions = prepare_es_actions(atlas_data=atlas_bulk_data, grafana_dict=grafana_processed_dict)
+    actions = prepare_es_actions(
+        atlas_data=atlas_bulk_data, grafana_dict=grafana_processed_dict)
 
     try:
         bulk(es, actions)
