@@ -1,7 +1,9 @@
 #!/bin/bash
 date
 echo 'alarm generated on VP xcache servers missing heartbeats.'
-python3 vp.py
+python3 -m ensurepip --upgrade
+python3 -m pip install -r requirements.txt
+python3 vp.py > vp.log 2>&1
 rc=$?; if [[ $rc != 0 ]]; then 
     echo "problem running VP alarm. Exiting."
     exit $rc

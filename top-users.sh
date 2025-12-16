@@ -1,15 +1,8 @@
 #!/bin/bash
 date
-
-# service sendmail start
-
-# python3 top-users-Alarm.py
-# rc=$?; if [[ $rc != 0 ]]; then 
-#     echo "problem getting top users. Exiting."
-#     exit $rc
-# fi
-
-python3 top-users-AlarmJIRA.py
+python3 -m ensurepip --upgrade
+python3 -m pip install -r requirements.txt
+python3 top-users-AlarmJIRA.py > top-users-AlarmJIRA.log 2>&1
 rc=$?; if [[ $rc != 0 ]]; then 
     echo "problem getting top users to JIRA. Exiting."
     exit $rc

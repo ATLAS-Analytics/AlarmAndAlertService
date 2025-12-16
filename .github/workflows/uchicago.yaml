@@ -59,3 +59,150 @@ jobs:
                   name: ${{ github.job }}-logs
                   path: |
                       varnish.log
+
+    xcache:
+        runs-on: arc-runner-set-uchicago-alarm-alert-system
+        steps:
+            - uses: actions/checkout@v6
+            - name: execute
+              run: ./xcache.sh
+              shell: bash
+              env:
+                  ES_HOST: ${{ secrets.ES_HOST }}
+                  ES_USER: ${{ secrets.ES_USER }}
+                  ES_PASS: ${{ secrets.ES_PASS }}
+                  AAAS: ${{ secrets.AAAS }}
+                  MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+            - name: upload log
+              if: always()
+              uses: actions/upload-artifact@v5
+              with:
+                  name: ${{ github.job }}-logs
+                  path: |
+                      xcache.log
+
+    vp:
+        runs-on: arc-runner-set-uchicago-alarm-alert-system
+        steps:
+            - uses: actions/checkout@v6
+            - name: execute
+              run: ./vp.sh
+              shell: bash
+              env:
+                  ES_HOST: ${{ secrets.ES_HOST }}
+                  ES_USER: ${{ secrets.ES_USER }}
+                  ES_PASS: ${{ secrets.ES_PASS }}
+                  AAAS: ${{ secrets.AAAS }}
+                  MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+            - name: upload log
+              if: always()
+              uses: actions/upload-artifact@v5
+              with:
+                  name: ${{ github.job }}-logs
+                  path: |
+                      vp.log
+
+    top-users:
+        runs-on: arc-runner-set-uchicago-alarm-alert-system
+        steps:
+            - uses: actions/checkout@v6
+            - name: execute
+              run: ./top-users.sh
+              shell: bash
+              env:
+                  ES_HOST: ${{ secrets.ES_HOST }}
+                  ES_USER: ${{ secrets.ES_USER }}
+                  ES_PASS: ${{ secrets.ES_PASS }}
+                  AAAS: ${{ secrets.AAAS }}
+                  MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+            - name: upload log
+              if: always()
+              uses: actions/upload-artifact@v5
+              with:
+                  name: ${{ github.job }}-logs
+                  path: |
+                      top-users.log
+
+    job-task-indexing:
+        runs-on: arc-runner-set-uchicago-alarm-alert-system
+        steps:
+            - uses: actions/checkout@v6
+            - name: execute
+              run: ./job-task-indexing.sh
+              shell: bash
+              env:
+                  ES_HOST: ${{ secrets.ES_HOST }}
+                  ES_USER: ${{ secrets.ES_USER }}
+                  ES_PASS: ${{ secrets.ES_PASS }}
+                  AAAS: ${{ secrets.AAAS }}
+                  MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+            - name: upload log
+              if: always()
+              uses: actions/upload-artifact@v5
+              with:
+                  name: ${{ github.job }}-logs
+                  path: |
+                      job-task-indexing.log
+
+    frontier-threads:
+        runs-on: arc-runner-set-uchicago-alarm-alert-system
+        steps:
+            - uses: actions/checkout@v6
+            - name: execute
+              run: ./frontier-threads.sh
+              shell: bash
+              env:
+                  ES_HOST: ${{ secrets.ES_HOST }}
+                  ES_USER: ${{ secrets.ES_USER }}
+                  ES_PASS: ${{ secrets.ES_PASS }}
+                  AAAS: ${{ secrets.AAAS }}
+                  MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+            - name: upload log
+              if: always()
+              uses: actions/upload-artifact@v5
+              with:
+                  name: ${{ github.job }}-logs
+                  path: |
+                      frontier-threads.log
+
+    frontier-failed-q:
+        runs-on: arc-runner-set-uchicago-alarm-alert-system
+        steps:
+            - uses: actions/checkout@v6
+            - name: execute
+              run: ./frontier-failed-q.sh
+              shell: bash
+              env:
+                  ES_HOST: ${{ secrets.ES_HOST }}
+                  ES_USER: ${{ secrets.ES_USER }}
+                  ES_PASS: ${{ secrets.ES_PASS }}
+                  AAAS: ${{ secrets.AAAS }}
+                  MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+            - name: upload log
+              if: always()
+              uses: actions/upload-artifact@v5
+              with:
+                  name: ${{ github.job }}-logs
+                  path: |
+                      frontier-failed-q.log
+
+    frontier-bad-sql:
+        runs-on: arc-runner-set-uchicago-alarm-alert-system
+        steps:
+            - uses: actions/checkout@v6
+            - name: execute
+              run: ./frontier-bad-sql.sh
+              shell: bash
+              env:
+                  ES_HOST: ${{ secrets.ES_HOST }}
+                  ES_USER: ${{ secrets.ES_USER }}
+                  ES_PASS: ${{ secrets.ES_PASS }}
+                  AAAS: ${{ secrets.AAAS }}
+                  MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+            - name: upload log
+              if: always()
+              uses: actions/upload-artifact@v5
+              with:
+                  name: ${{ github.job }}-logs
+                  path: |
+                      frontier-bad-sql.log
