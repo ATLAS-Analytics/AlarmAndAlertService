@@ -31,7 +31,6 @@ jobs:
                   ES_PASS: ${{ secrets.ES_PASS }}
                   AAAS: ${{ secrets.AAAS }}
                   MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
-
             - name: upload log
               if: always()
               uses: actions/upload-artifact@v5
@@ -53,3 +52,10 @@ jobs:
                   ES_PASS: ${{ secrets.ES_PASS }}
                   AAAS: ${{ secrets.AAAS }}
                   MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+            - name: upload log
+              if: always()
+              uses: actions/upload-artifact@v5
+              with:
+                  name: ${{ github.job }}-logs
+                  path: |
+                      varnish.log
