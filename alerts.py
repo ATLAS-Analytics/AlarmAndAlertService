@@ -1,15 +1,17 @@
 import os
+import sys
 import time
 import datetime as dt
 import requests
-import json
 
-config_path = '/config/config.json'
-# config_path = 'kube/secrets/config.json'
-mailgun_api_key = None
 
-with open(config_path) as json_data:
-    config = json.load(json_data,)
+env = {}
+for var in ['AAAS', 'MAILGUN_API_KEY']:
+    env[var] = os.environ.get(var, None)
+    if not env[var]:
+        print('environment variable {} not set!'.format(var))
+        raise ValueError('environment variable {} not set!'.format(var))
+        sys.exit(1)
 
 categories = []
 
@@ -48,7 +50,7 @@ class alarms:
             js['source'] = source
         if level:
             js['level'] = level
-        res = requests.post(config['AAAS'] + '/alarm', json=js)
+        res = requests.post(env['AAAS'] + '/alarm', json=js)
         if (res.status_code == 200):
             print('created alarm: {}:{}:{} {} {}'.format(
                 self.category, self.subcategory, self.event, body, tags))
@@ -63,7 +65,7 @@ class alarms:
             "event": self.event,
             "period": period
         }
-        res = requests.post(config['AAAS'] + '/alarm/fetch', json=js)
+        res = requests.post(env['AAAS'] + '/alarm/fetch', json=js)
         if (res.status_code == 200):
             data = res.json()
             print('recieved {} alarms'.format(len(data)))
@@ -120,7 +122,7 @@ class user:
     def addHeaderFooter(self):
         header = f'Dear {self.user},\n\n\t'
         header += 'Herewith a list of alarms you subscribed to. '
-        header += f'Preferences may be changed by {self.email} by visiting {config['AAAS']}.\n'
+        header += f'Preferences may be changed by {self.email} by visiting {env["AAAS"]}.\n'
         footer = 'Best regards,\n Alarm & Alert Service Team'
         self.mail = header+self.mail+footer
 
@@ -131,7 +133,7 @@ class user:
         print(self.mail)
         requests.post(
             "https://api.mailgun.net/v3/mg.analytics.mwt2.org/messages",
-            auth=("api", mailgun_api_key),
+            auth=("api", env["MAILGUN_API_KEY"]),
             data={
                 "from": "ATLAS Alarm & Alert System <aaas@analytics.mwt2.org>",
                 "to": [self.preferences['prefered_mail']],
@@ -142,7 +144,7 @@ class user:
 
 def getCategories():
     global categories
-    res = requests.get(config['AAAS'] + '/alarm/categories')
+    res = requests.get(env['AAAS'] + '/alarm/categories')
     if (res.status_code == 200):
         categories = res.json()
         # print(categories)
@@ -152,7 +154,7 @@ def getCategories():
 
 
 def getUsers():
-    res = requests.get(config['AAAS'] + '/user')
+    res = requests.get(env['AAAS'] + '/user')
     users = []
     if (res.status_code == 200):
         data = res.json()
@@ -166,7 +168,6 @@ def getUsers():
 
 
 if __name__ == '__main__':
-    mailgun_api_key = os.environ['MAILGUN_API_KEY']
     getCategories()
     users = getUsers()
     currentHour = dt.datetime.now().hour
