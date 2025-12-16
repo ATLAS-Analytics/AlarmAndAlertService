@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 import datetime as dt
 import requests
@@ -11,7 +10,6 @@ for var in ['AAAS', 'MAILGUN_API_KEY']:
     if not env[var]:
         print('environment variable {} not set!'.format(var))
         raise ValueError('environment variable {} not set!'.format(var))
-        sys.exit(1)
 
 categories = []
 
