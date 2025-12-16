@@ -7,24 +7,25 @@ from elasticsearch import Elasticsearch, helpers, exceptions as es_exceptions
 from elasticsearch.helpers import scan
 import datetime as dt
 
-import numpy as np
 import pandas as pd
 
-import json
-with open('/config/config.json') as json_data:
-    config = json.load(json_data,)
+import os
+env = {}
+for var in ['ES_HOST', 'ES_USER', 'ES_PASS']:
+    env[var] = os.environ.get(var, None)
+    if not env[var]:
+        print('environment variable {} not set!'.format(var))
+        sys.exit(1)
+
 
 es = Elasticsearch(
-    hosts=[{'host': config['ES_HOST'], 'port':9200, 'scheme':'https'}],
-    basic_auth=(config['ES_USER'], config['ES_PASS']),
+    hosts=[{'host': env['ES_HOST'], 'port': 9200, 'scheme': 'https'}],
+    basic_auth=(env['ES_USER'], env['ES_PASS']),
     request_timeout=60)
-
-days_around = 5
 
 date_to_process = sys.argv[1].split('-')
 cdt = datetime.datetime(int(date_to_process[0]), int(
     date_to_process[1]), int(date_to_process[2]))
-# cdt = datetime.datetime.utcnow() - datetime.timedelta(days=2) # to make sure data is in HDFS
 
 
 # usefull functions
@@ -33,7 +34,7 @@ def store(docs_to_store):
     try:
         res = helpers.bulk(es, docs_to_store,
                            raise_on_exception=True, request_timeout=60)
-        #print("inserted:",res[0], '\tErrors:',res[1])
+        # print("inserted:",res[0], '\tErrors:',res[1])
     except es_exceptions.ConnectionError as e:
         print('ConnectionError ', e)
     except es_exceptions.TransportError as e:

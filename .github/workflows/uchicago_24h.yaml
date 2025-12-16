@@ -1,7 +1,7 @@
-name: uchicago_12h
+name: uchicago_24h
 on:
     schedule:
-        - cron: "3 3,15 * * *"
+        - cron: "5 2 * * *"
 
 permissions:
     contents: read
@@ -12,19 +12,16 @@ jobs:
         steps:
             - uses: actions/checkout@v6
             - name: execute
-              run: ./hepspec.sh
+              run: ./fts-aggregator.sh
               shell: bash
               env:
                   ES_HOST: ${{ secrets.ES_HOST }}
-                  HEPSPEC_ES_USER: ${{ secrets.HEPSPEC_ES_USER }}
-                  HEPSPEC_ES_PASS: ${{ secrets.HEPSPEC_ES_PASS }}
-                  HEPSPEC_TOKEN: ${{ secrets.HEPSPEC_TOKEN }}
-                  AAAS: ${{ secrets.AAAS }}
-                  MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+                  HEPSPEC_ES_USER: ${{ secrets.ES_USER }}
+                  HEPSPEC_ES_PASS: ${{ secrets.ES_PASS }}
             - name: upload log
               if: always()
               uses: actions/upload-artifact@v6
               with:
                   name: ${{ github.job }}-logs
                   path: |
-                      hepspec.log
+                      fts-aggregator.log
