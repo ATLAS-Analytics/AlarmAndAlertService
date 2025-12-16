@@ -3,16 +3,10 @@
 # ====
 # It is run every 30 min from a cron job.
 
-import json
 from datetime import datetime
 import requests
 
 from alerts import alarms
-
-config_path = '/config/config.json'
-
-with open(config_path) as json_data:
-    config = json.load(json_data,)
 
 print('current time', datetime.now())
 

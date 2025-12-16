@@ -13,7 +13,7 @@ import sys
 from datetime import datetime
 import requests
 from alerts import alarms
-from elasticsearch import Elasticsearch, exceptions as es_exceptions
+from elasticsearch import Elasticsearch
 from typing import Any, Dict
 
 
