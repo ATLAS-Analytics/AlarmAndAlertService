@@ -7,7 +7,7 @@ permissions:
     contents: read
 
 jobs:
-    hepspec:
+    fts-aggregator:
         runs-on: arc-runner-set-uchicago-alarm-alert-system
         steps:
             - uses: actions/checkout@v6
@@ -16,8 +16,8 @@ jobs:
               shell: bash
               env:
                   ES_HOST: ${{ secrets.ES_HOST }}
-                  HEPSPEC_ES_USER: ${{ secrets.ES_USER }}
-                  HEPSPEC_ES_PASS: ${{ secrets.ES_PASS }}
+                  ES_USER: ${{ secrets.ES_USER }}
+                  ES_PASS: ${{ secrets.ES_PASS }}
             - name: upload log
               if: always()
               uses: actions/upload-artifact@v6

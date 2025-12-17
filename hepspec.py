@@ -24,7 +24,7 @@ for var in ['ES_HOST', 'HEPSPEC_ES_USER', 'HEPSPEC_ES_PASS', 'HEPSPEC_TOKEN']:
 
 es = Elasticsearch(
     hosts=[{'host': env['ES_HOST'], 'port': 9200, 'scheme': 'https'}],
-    basic_auth=(env['ES_USER'], env['ES_PASS']),
+    basic_auth=(env['HEPSPEC_ES_USER'], env['HEPSPEC_ES_PASS']),
     request_timeout=60)
 
 if es.ping():
