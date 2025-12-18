@@ -98,8 +98,7 @@ class link:
         for ts in range(st, et + 1):
             if ts >= psb and ts < pse:
                 timestamp = ts * 60
-                val = self.df.get_value(timestamp, 'rate') + scaled_rate
-                self.df.set_value(timestamp, 'rate', val)
+                self.df.loc[timestamp, 'rate'] += scaled_rate
 
     def add_queue(self, start_time, end_time, activity):
         if activity not in activities:
@@ -109,8 +108,7 @@ class link:
         for ts in range(st, et + 1):
             if ts >= psb and ts < pse:
                 timestamp = ts * 60
-                val = self.df.get_value(timestamp, activity) + 1
-                self.df.set_value(timestamp, activity, val)
+                self.df.loc[timestamp, activity] += 1
 
     def stats(self):
         print(self.df.describe())
@@ -156,10 +154,8 @@ class endpoint:
         for ts in range(st, et + 1):
             if ts >= psb and ts < pse:
                 timestamp = ts * 60
-                val = self.df.get_value(timestamp, drct) + scaled_rate
-                self.df.set_value(timestamp, drct, val)
-                val = self.df.get_value(timestamp, drct1) + 1
-                self.df.set_value(timestamp, drct1, val)
+                self.df.loc[timestamp, drct] += scaled_rate
+                self.df.loc[timestamp, drct1] += 1
 
     def stats(self):
         print(self.df.describe())
@@ -185,7 +181,7 @@ class endpoint:
 
 query = {
     "size": 0,
-    "_source": ["metadata.src_site", "metadata.dst_site", "metadata.activity", "f_size",
+    "_source": ["metadata.src_rse", "metadata.dst_rse", "metadata.activity", "f_size",
                 "processing_start", "transfer_start", "transfer_stop", "processing_stop"],
     "query": {
         "bool": {
@@ -210,15 +206,17 @@ links = {}
 count = 0
 for res in scroll:
     count += 1
-#    print(res)
 #    if count>10: break
     if not count % 100000:
         print(count)
     r = res['_source']
-    if not ('src_site' in r['metadata'] and 'dst_site' in r['metadata']):
+    if not 'metadata' in r:
+        # print(r)
         continue
-    src = r['metadata']['src_site']
-    dest = r['metadata']['dst_site']
+    if not ('src_rse' in r['metadata'] and 'dst_rse' in r['metadata']):
+        continue
+    src = r['metadata']['src_rse']
+    dest = r['metadata']['dst_rse']
     subm = r['processing_start'] / 1000
     star = r['transfer_start'] / 1000
     tran = r['transfer_stop'] / 1000
