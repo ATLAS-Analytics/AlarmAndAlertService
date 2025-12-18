@@ -6,7 +6,12 @@ from collections import defaultdict
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan
 from grafana_api.grafana_face import GrafanaFace
-from datetime import datetime, UTC
+try:
+    from datetime import UTC
+except ImportError:  # Python < 3.11
+    from datetime import timezone
+    UTC = timezone.utc
+from datetime import datetime
 from elasticsearch.helpers import bulk, BulkIndexError
 from itertools import chain
 import copy
