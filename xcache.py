@@ -5,8 +5,11 @@
 
 from datetime import datetime
 import requests
+from dotenv import load_dotenv
 
 from alerts import alarms
+
+load_dotenv()
 
 print('current time', datetime.now())
 

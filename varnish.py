@@ -19,6 +19,9 @@ from typing import Any, Dict
 
 # load ES_HOST, ES_USER, ES_PASS from environment
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 env = {}
 for var in ['ES_HOST', 'ES_USER', 'ES_PASS']:
     env[var] = os.environ.get(var, None)

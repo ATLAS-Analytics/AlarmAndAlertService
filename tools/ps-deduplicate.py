@@ -6,6 +6,9 @@ import json
 from elasticsearch import Elasticsearch, exceptions as es_exceptions
 from elasticsearch.helpers import scan, bulk
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
 
 with open('/config/config.json') as json_data:
     config = json.load(json_data,)

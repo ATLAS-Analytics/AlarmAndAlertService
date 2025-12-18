@@ -14,6 +14,9 @@ from pandas.io.json import json_normalize
 from elasticsearch import Elasticsearch, exceptions as es_exceptions
 import matplotlib.pyplot as plt
 import matplotlib
+from dotenv import load_dotenv
+
+load_dotenv()
 matplotlib.use("agg")
 matplotlib.rc('font', **{'size': 12})
 

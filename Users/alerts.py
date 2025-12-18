@@ -14,6 +14,9 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 
 from subprocess import Popen, PIPE
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class alerts:

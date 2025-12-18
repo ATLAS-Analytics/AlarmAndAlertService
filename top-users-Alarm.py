@@ -7,6 +7,9 @@ from pandas.io.json import json_normalize
 
 from datetime import datetime, timedelta
 import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
 
 import json
 with open('/config/config.json') as json_data:

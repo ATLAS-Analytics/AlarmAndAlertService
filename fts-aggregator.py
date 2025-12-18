@@ -1,7 +1,4 @@
-import pickle
-import re
 import datetime
-import time
 import sys
 from elasticsearch import Elasticsearch, helpers, exceptions as es_exceptions
 from elasticsearch.helpers import scan
@@ -10,6 +7,9 @@ import datetime as dt
 import pandas as pd
 
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 env = {}
 for var in ['ES_HOST', 'ES_USER', 'ES_PASS']:
     env[var] = os.environ.get(var, None)

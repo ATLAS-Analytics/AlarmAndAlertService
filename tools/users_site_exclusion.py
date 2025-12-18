@@ -6,6 +6,9 @@ from datetime import datetime
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
+from dotenv import load_dotenv
+
+load_dotenv()
 
 with open('/config/config.json') as json_data:
     config = json.load(json_data,)

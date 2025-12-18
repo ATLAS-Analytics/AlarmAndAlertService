@@ -2,8 +2,10 @@ import os
 import time
 import datetime as dt
 import requests
+from dotenv import load_dotenv
 
 
+load_dotenv()
 env = {}
 for var in ['AAAS', 'MAILGUN_API_KEY']:
     env[var] = os.environ.get(var, None)

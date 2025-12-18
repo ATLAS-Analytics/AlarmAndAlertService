@@ -8,6 +8,9 @@ from apiclient import discovery
 import oauth2client
 from oauth2client import client
 from oauth2client import tools
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class user:

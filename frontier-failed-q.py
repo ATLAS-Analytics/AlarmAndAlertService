@@ -16,6 +16,9 @@ from elasticsearch import Elasticsearch
 
 
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 env = {}
 for var in ['ES_HOST', 'ES_USER', 'ES_PASS']:
     env[var] = os.environ.get(var, None)

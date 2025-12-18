@@ -14,6 +14,9 @@ from pandas import DataFrame
 import pandas as pd
 from datetime import datetime, timedelta
 import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
 
 import json
 
