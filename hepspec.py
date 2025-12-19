@@ -250,7 +250,7 @@ def prepare_es_actions(atlas_data: List = None, grafana_dict: Dict = None) -> Li
 def main():
 
     grafana_connection = GrafanaFace(
-        auth=config["HEPSPEC_TOKEN"], host=grafana_url)
+        auth=env["HEPSPEC_TOKEN"], host=grafana_url)
 
     if es.indices.exists(index=hepspec_index):
         print(f"Index '{hepspec_index}' exists.")
