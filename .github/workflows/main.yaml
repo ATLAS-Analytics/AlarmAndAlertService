@@ -1,9 +1,9 @@
 name: Build ATLAS Alarm and Alert image
 
 on:
-  push:
-    branches:
-      - "main"
+  # push:
+  #   branches:
+  #     - "main"
 
 jobs:
   docker:
