@@ -151,6 +151,7 @@ def get_grafana_data(url: str = None, query: str = None) -> List:
 
     response = requests.post(url, headers=headers, data=query)
     content = json.loads(response.content)
+    print(content)
     data = content['responses'][0]['hits']['hits']
     grafana_data.append(data)
 
