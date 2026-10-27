@@ -23,7 +23,7 @@ jobs:
                   MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
             - name: upload log
               if: always()
-              uses: actions/upload-artifact@v6
+              uses: actions/upload-artifact@v7
               with:
                   name: ${{ github.job }}-logs
                   path: |
