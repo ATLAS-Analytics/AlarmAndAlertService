@@ -106,6 +106,8 @@ class user:
         self.email = data['_source']['email']
         self.subscriptions = data['_source']['subscriptions']
         self.preferences = data['_source']['preferences']
+        # site issues the user muted on the subscriptions page
+        self.acknowledgements = data['_source'].get('acknowledgements', [])
         if 'prefered_mail' not in self.preferences or self.preferences['prefered_mail'] == '':
             self.preferences['prefered_mail'] = self.email
         self.mail = ''
@@ -140,6 +142,29 @@ class user:
                 "subject": 'Alarm & Alert System delivery',
                 "text": self.mail}
         )
+
+
+def level_ok(sub, alarm):
+    """True if the subscription wants this alarm's severity level.
+    A missing or '*' `levels` means all levels; alarms without a level are always sent."""
+    levels = sub.get('levels', '*')
+    if levels == '*' or 'level' not in alarm:
+        return True
+    return str(alarm['level']) in levels.split(' ')
+
+
+def is_acknowledged(user, sub, alarm, now_ms):
+    """True if the user muted (acknowledged) one of this alarm's tags for this event.
+    A mute limited to some severity `levels` lets alarms of other levels through."""
+    level = alarm.get('level')
+    muted = {a['tag'] for a in user.acknowledgements
+             if a['until'] > now_ms and (a['category'], a['subcategory'], a['event']) ==
+             (sub['category'], sub['subcategory'], sub['event'])
+             and (not a.get('levels') or level is None or str(level) in a['levels'])}
+    tags = alarm.get('tags', [])
+    if isinstance(tags, str):
+        tags = [tags]
+    return bool(muted) and any(t in muted for t in tags)
 
 
 def getCategories():
@@ -211,6 +236,12 @@ if __name__ == '__main__':
                         print('tag not matched:', al['tags'])
                         continue
                     print('tag matched.')
+                if not level_ok(s, al):
+                    print('level not matched:', al['level'])
+                    continue
+                if is_acknowledged(u, s, al, time.time() * 1000):
+                    print('acknowledged, skipping:', al['tags'])
+                    continue
                 alert_text = a.getText(al)
                 u.addAlert(alert_text)
         u.sendMail()
