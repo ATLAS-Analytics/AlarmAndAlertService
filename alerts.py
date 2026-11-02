@@ -1,8 +1,10 @@
 import os
+import re
 import time
 import datetime as dt
 import requests
 from dotenv import load_dotenv
+import email_report
 
 
 load_dotenv()
@@ -65,37 +67,21 @@ class alarms:
             "event": self.event,
             "period": period
         }
-        res = requests.post(env['AAAS'] + '/alarm/fetch', json=js)
+        try:
+            res = requests.post(env['AAAS'] + '/alarm/fetch', json=js)
+        except requests.RequestException as err:
+            print('problem in receiving alarms!', err)
+            return []
         if (res.status_code == 200):
             data = res.json()
             print('recieved {} alarms'.format(len(data)))
             return data
         print('problem in receiving alarms!')
+        return []
 
-    def getText(self, data):
-        res = ''
-        res += time.strftime("%a, %d %b %Y %H:%M:%S",
-                             time.localtime(data['created_at']/1000))
-        res += '\t{}/{}/{}\t\t{}\n'.format(data['category'],
-                                           data['subcategory'], data['event'], data['body'])
-        if 'tags' in data:
-            res += 'tags: {}\n'.format(', '.join(data['tags']))
-        if 'level' in data:
-            res += 'Level: {}\n'.format(data['level'])
-        if self.template and 'source' in data:
-            vars = data['source']
-            temp = self.template
-            for v in vars:
-                if '%{'+v+'}' in temp:
-                    temp = temp.replace('%{'+v+'}', str(vars[v]))
-                if 'c{'+v+'}' in temp:
-                    temp = temp.replace('c{'+v+'}', str(len(vars[v])))
-                if 'p{'+v+'}' in temp:
-                    temp = temp.replace(
-                        'p{'+v+'}', str(round(vars[v]*100, 3))+'%')
-            res += temp
-        # print(data)
-        return res
+    def getEntry(self, data):
+        """What an email shows of the alarm `data`: its source filled into the template."""
+        return email_report.alarm_entry(data, self.template)
 
 
 class user:
@@ -110,7 +96,7 @@ class user:
         self.acknowledgements = data['_source'].get('acknowledgements', [])
         if 'prefered_mail' not in self.preferences or self.preferences['prefered_mail'] == '':
             self.preferences['prefered_mail'] = self.email
-        self.mail = ''
+        self.alerts = []  # the alarms to email, see email_report.alarm_entry
 
     def __str__(self):
         out = f'{self.user} {self.email} preferences: {self.preferences}\nsubs:\n'
@@ -118,30 +104,45 @@ class user:
             out += ('\t'+str(s)+'\n')
         return out
 
-    def addAlert(self, body):
-        self.mail += body+'\n\n'
+    def addAlert(self, entry):
+        self.alerts.append(entry)
 
-    def addHeaderFooter(self):
-        header = f'Dear {self.user},\n\n\t'
-        header += 'Herewith a list of alarms you subscribed to. '
-        header += f'Preferences may be changed by {self.email} by visiting {env["AAAS"]}.\n'
-        footer = 'Best regards,\n Alarm & Alert Service Team'
-        self.mail = header+self.mail+footer
-
-    def sendMail(self):
-        if not self.mail:
+    def sendMail(self, hours, until=None):
+        """Emails the collected alarms of the `hours` before `until` (seconds, by default now),
+        as HTML and as plain text."""
+        if not self.alerts:
             return
-        self.addHeaderFooter()
-        print(self.mail)
+        text = email_report.render_text(self.user, self.alerts, hours, env['AAAS'], until)
+        print(text)
         requests.post(
             "https://api.mailgun.net/v3/mg.analytics.mwt2.org/messages",
             auth=("api", env["MAILGUN_API_KEY"]),
             data={
                 "from": "ATLAS Alarm & Alert System <aaas@analytics.mwt2.org>",
                 "to": [self.preferences['prefered_mail']],
-                "subject": 'Alarm & Alert System delivery',
-                "text": self.mail}
+                "subject": email_report.subject(self.alerts),
+                "text": text,
+                "html": email_report.render_html(self.user, self.alerts, hours, env['AAAS'], until)}
         )
+
+
+def hours_since_last_mail(hour, interval):
+    """How many hours back the previous mail went out to a user mailed at the hours divisible
+    by `interval`: e.g. 4 at midnight for every 10 hours (the last went out at 20:00).
+    Each mail covers the alarms since the previous one."""
+    for back in range(1, 24):
+        if (hour - back) % 24 % interval == 0:
+            return back
+    return 24
+
+
+def tag_matched(pattern, tags):
+    """True if the subscription tag `pattern` is one of the alarm's `tags`, ignoring
+    case. '*' in a tag stands for any characters, e.g. *MWT2* matches MWT2_UC."""
+    if isinstance(tags, str):
+        tags = [tags]
+    regex = '.*'.join(re.escape(part) for part in pattern.split('*'))
+    return any(re.fullmatch(regex, str(t), re.IGNORECASE) for t in tags)
 
 
 def level_ok(sub, alarm):
@@ -197,6 +198,10 @@ if __name__ == '__main__':
     users = getUsers()
     currentHour = dt.datetime.now().hour
     print('current hour:', currentHour)
+    # each mail covers whole hours up to the start of this one: /alarm/fetch returns alarms from
+    # the start of an hour, so alarms of the first minutes of this hour would otherwise be
+    # mailed now and again with the next mail
+    hourStart = int(time.time() // 3600 * 3600)
     for u in users:
 
         print(u.user, u.preferences)
@@ -216,6 +221,7 @@ if __name__ == '__main__':
         if currentHour % mi:
             print('not yet...')
             continue
+        hours = hours_since_last_mail(currentHour, mi)
 
         for s in u.subscriptions:
             print(s)
@@ -224,13 +230,15 @@ if __name__ == '__main__':
             except ValueError:
                 print('missing:', s['category'], s['subcategory'], s['event'])
                 continue
-            als = a.getAlarms(mi)
+            als = a.getAlarms(hours)
             for al in als:
+                if al['created_at'] >= hourStart * 1000:
+                    continue  # goes out with the next mail
                 if 'tags' in s and 'tags' in al and s['tags'] != '*':
                     tagList = s['tags'].split(' ')
                     found = False
                     for tl in tagList:
-                        if tl in al['tags']:
+                        if tag_matched(tl, al['tags']):
                             found = True
                     if not found:
                         print('tag not matched:', al['tags'])
@@ -242,7 +250,6 @@ if __name__ == '__main__':
                 if is_acknowledged(u, s, al, time.time() * 1000):
                     print('acknowledged, skipping:', al['tags'])
                     continue
-                alert_text = a.getText(al)
-                u.addAlert(alert_text)
-        u.sendMail()
+                u.addAlert(a.getEntry(al))
+        u.sendMail(hours, hourStart)
         print('-------------------------------------------------------------')
